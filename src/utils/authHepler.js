@@ -2,6 +2,7 @@ import API from './api';
 
 const loginUser = async (credentials) => {
     try {
+        console.log("Logging in with credentials:", credentials);
         const response = await API.post("/users/login", credentials);
 
         localStorage.setItem("token", response.data.token);
@@ -14,6 +15,7 @@ const loginUser = async (credentials) => {
 
 const registerUser = async (userData) => {
     try {
+        console.log("registering:", userData);
         const response = await API.post("/users/register", userData);
         return response.data;
     } catch (error) {
