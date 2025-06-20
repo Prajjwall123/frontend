@@ -7,6 +7,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient();
 
 const Home = lazy(() => import("./core/public/Home"));
+const Login = lazy(() => import("./core/public/Login"));
+const Register = lazy(() => import("./core/public/Register"));
+const VerifyOtp = lazy(() => import("./core/public/VerifyOtp"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -14,6 +17,9 @@ function App() {
 
   const publicRoutes = [
     { path: "/", element: <Suspense fallback={<div>Loading...</div>}><Home /></Suspense> },
+    { path: "/login", element: <Suspense fallback={<div>Loading...</div>}><Login /></Suspense> },
+    { path: "/register", element: <Suspense fallback={<div>Loading...</div>}><Register /></Suspense> },
+    { path: "/verify-otp", element: <Suspense fallback={<div>Loading...</div>}><VerifyOtp /></Suspense> },
   ];
 
   return (
