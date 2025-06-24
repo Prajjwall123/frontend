@@ -30,9 +30,9 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-[#05213b]/95 backdrop-blur-md shadow-xl' : 'bg-[#05213b]'}`}>
+    <nav className={`fixed w-full z-50 transition-all duration-500 bg-gray-900 border-b border-gray-800 ${scrolled ? 'bg-opacity-95 backdrop-blur-md shadow-xl' : ''}`}>
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center space-x-2">
@@ -40,7 +40,7 @@ const Navbar = () => {
                 <img
                   src={whiteLogo}
                   alt="Gradly Logo"
-                  className="h-9 w-auto transition-transform duration-300 hover:scale-105"
+                  className="h-10 w-auto transition-transform duration-300 hover:scale-105"
                 />
                 <span className="text-xl font-extrabold text-white tracking-tight bg-clip-text bg-gradient-to-r from-white to-gray-200">
                   GRADLY
@@ -57,8 +57,8 @@ const Navbar = () => {
                 to={item.path}
                 className={`px-4 py-1.5 text-sm font-medium rounded-xl transition-all duration-300 flex items-center group ${
                   location.pathname === item.path
-                    ? 'text-[#05213b] bg-white shadow-md hover:shadow-lg'
-                    : 'text-white/90 hover:text-white hover:bg-white/10 hover:shadow-inner'
+                    ? 'text-white bg-gray-800 shadow-md hover:shadow-lg'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800 hover:shadow-inner'
                 }`}
               >
                 {item.icon}
@@ -71,14 +71,14 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center space-x-3 ml-6">
             <Link
               to="/login"
-              className="px-5 py-1.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 flex items-center border border-white/20 hover:border-white/30"
+              className="px-5 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-xl transition-all duration-300 flex items-center border border-gray-700 hover:border-gray-600"
             >
               <LogIn size={18} className="mr-1.5" />
               Log In
             </Link>
             <Link
               to="/register"
-              className="px-5 py-1.5 bg-white text-[#05213b] text-sm font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] transform"
+              className="px-5 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] transform"
             >
               Sign Up
             </Link>
@@ -88,7 +88,7 @@ const Navbar = () => {
           <div className="lg:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex items-center justify-center p-1.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 focus:outline-none transition-all duration-300 border border-white/20 hover:border-white/30"
+              className="inline-flex items-center justify-center p-1.5 rounded-xl text-gray-300 hover:text-white hover:bg-gray-800 focus:outline-none transition-all duration-300 border border-gray-700 hover:border-gray-600"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
@@ -104,20 +104,14 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       <div
-        className={`lg:hidden transition-all duration-300 ease-in-out overflow-hidden ${
-          mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`lg:hidden fixed inset-0 bg-gray-900 border-r border-gray-800 z-40 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="px-4 pt-3 pb-6 space-y-2 bg-[#05213b] border-t border-white/10 shadow-inner rounded-b-2xl">
+        <div className="px-4 pt-3 pb-6 space-y-2">
           {navLinks.map((item) => (
             <Link
               key={item.name}
               to={item.path}
-              className={`group flex items-center px-5 py-3 text-base font-medium rounded-xl transition-all duration-300 ${
-                location.pathname === item.path
-                  ? 'bg-white/10 text-white shadow-inner'
-                  : 'text-white/90 hover:bg-white/10 hover:text-white hover:pl-6 transform'
-              }`}
+              className={`flex items-center w-full px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${location.pathname === item.path ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className="flex items-center">
