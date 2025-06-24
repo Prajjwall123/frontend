@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
 import heroImg from "../../assets/graduation-hero.png";
+import whiteLogo from "../../assets/white_logo.png";
 import { GraduationCap, DollarSign, PenTool, BookOpen } from "lucide-react";
 
 const features = [
@@ -30,9 +31,9 @@ const features = [
 const Home = () => (
     <div className="min-h-screen bg-white">
         <Navbar />
-        <main className="max-w-[90rem] mx-auto px-6 pt-16 pb-12">
+        <main className="max-w-[90rem] mx-auto px-6">
             {/* Hero Section */}
-            <section className="flex flex-col md:flex-row items-center justify-between gap-14">
+            <section className="flex flex-col md:flex-row items-center justify-between gap-14 pt-8 pb-12">
                 <div className="flex-1 pr-4">
                     <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight text-[#05213b]">
                         Your Global Future<br />Starts Here
@@ -46,14 +47,21 @@ const Home = () => (
                     </button>
                 </div>
                 <div className="flex-1 flex justify-center">
-                    <img src={heroImg} alt="Graduation" className="w-full max-w-lg rounded-2xl shadow-md" />
+                    <img src={heroImg} alt="Graduation" className="w-full max-w-lg rounded-2xl shadow-xl" />
                 </div>
             </section>
-
-            {/* Search Bar */}
-            <div className="mt-12">
-                <SearchBar />
+            
+            {/* Search Bar Section */}
+            <div className="relative z-10 -mt-16 mb-20">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="bg-white rounded-2xl p-8 shadow-2xl border border-gray-100">
+                        <h2 className="text-2xl font-bold text-[#05213b] mb-6 text-center">Find Your Dream University</h2>
+                        <SearchBar />
+                    </div>
+                </div>
             </div>
+
+
 
             {/* Features */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mt-16">
@@ -141,7 +149,7 @@ const Home = () => (
         <footer className="mt-24 bg-[#05213b] text-white py-10">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center px-6 gap-8">
                 <div className="flex items-center gap-3 mb-4 md:mb-0">
-                    <img src={require("../../assets/white_logo.png")} alt="Gradly Logo" className="w-10 h-10" />
+                    <img src={whiteLogo} alt="Gradly Logo" className="w-10 h-10" />
                     <span className="text-xl font-bold">GRADLY</span>
                 </div>
                 <ul className="flex gap-8 text-base font-medium mb-4 md:mb-0">

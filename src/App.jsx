@@ -10,6 +10,7 @@ const Home = lazy(() => import("./core/public/Home"));
 const Login = lazy(() => import("./core/public/Login"));
 const Register = lazy(() => import("./core/public/Register"));
 const VerifyOtp = lazy(() => import("./core/public/VerifyOtp"));
+const Dashboard = lazy(() => import("./core/public/Dashboard"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -20,6 +21,7 @@ function App() {
     { path: "/login", element: <Suspense fallback={<div>Loading...</div>}><Login /></Suspense> },
     { path: "/register", element: <Suspense fallback={<div>Loading...</div>}><Register /></Suspense> },
     { path: "/verify-otp", element: <Suspense fallback={<div>Loading...</div>}><VerifyOtp /></Suspense> },
+    { path: "/dashboard", element: <Suspense fallback={<div>Loading...</div>}><Dashboard /></Suspense> },
   ];
 
   return (
