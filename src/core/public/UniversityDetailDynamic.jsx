@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Award, Users, Globe, BookOpen, Check, Calendar, ExternalLink } from 'lucide-react';
+import { ArrowLeft, MapPin, Award, Users, Globe, BookOpen, Check, Calendar, ExternalLink, DollarSign, Percent } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { getUniversityById } from '../../utils/universityHelper';
 import { getCourseById } from '../../utils/coursesHelper';
+import { getScholarshipsByUniversityId } from '../../utils/scholarshipHelper';
 
 const UniversityDetailDynamic = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [programs, setPrograms] = useState([]);
+    const [scholarships, setScholarships] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Fetch university data
@@ -21,14 +23,27 @@ const UniversityDetailDynamic = () => {
         queryFn: () => getUniversityById(id),
     });
 
-    // Fetch courses when university data is loaded
+    // Fetch courses and scholarships when university data is loaded
     useEffect(() => {
-        if (university?.courses?.length) {
-            Promise.all(university.courses.map(courseId => getCourseById(courseId)))
-                .then(fetchedCourses => {
-                    setPrograms(fetchedCourses.filter(course => course !== null));
+        if (university) {
+            // Fetch courses
+            if (university.courses?.length) {
+                Promise.all(university.courses.map(courseId => getCourseById(courseId)))
+                    .then(fetchedCourses => {
+                        setPrograms(fetchedCourses.filter(course => course !== null));
+                    })
+                    .catch(console.error);
+            }
+
+            // Fetch scholarships
+            getScholarshipsByUniversityId(university._id)
+                .then(fetchedScholarships => {
+                    setScholarships(fetchedScholarships);
                 })
-                .catch(console.error);
+                .catch(error => {
+                    console.error('Error fetching scholarships:', error);
+                    toast.error('Failed to load scholarships');
+                });
         }
     }, [university]);
 
@@ -318,8 +333,48 @@ const UniversityDetailDynamic = () => {
                             <div className="lg:w-1/3 w-full space-y-6">
                                 {/* Scholarships Widget */}
                                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <h2 className="text-xl font-semibold mb-4">Scholarships</h2>
-                                    <p className="text-gray-500">No scholarships available at the moment.</p>
+                                    <h2 className="text-xl font-semibold mb-4">Available Scholarships</h2>
+                                    {scholarships.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {scholarships.map((scholarship) => (
+                                                <div key={scholarship._id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                                                    <div className="flex items-start justify-between">
+                                                        <h3 className="text-lg font-medium text-gray-900">{scholarship.scholarship_name}</h3>
+                                                        <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                                                            ${scholarship.amount_per_year?.toLocaleString()}/year
+                                                        </div>
+                                                    </div>
+
+                                                    {scholarship.terms_and_conditions && (
+                                                        <div className="mt-3">
+                                                            <h4 className="text-sm font-medium text-gray-700 mb-1">Eligibility:</h4>
+                                                            <p className="text-sm text-gray-600">
+                                                                {scholarship.terms_and_conditions}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                                                        onClick={() => setActiveTab('scholarships')}
+                                                    >
+                                                        Learn more
+                                                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-6">
+                                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <h3 className="mt-2 text-sm font-medium text-gray-900">No scholarships</h3>
+                                            <p className="mt-1 text-sm text-gray-500">There are currently no scholarships available for this university.</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Quick Facts Widget */}
