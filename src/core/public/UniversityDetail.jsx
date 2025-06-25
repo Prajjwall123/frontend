@@ -9,6 +9,10 @@ const universityData = {
   id: '1',
   name: 'Coventry University',
   location: 'Coventry, United Kingdom',
+  address: 'Priory St, Coventry CV1 5FB, United Kingdom',
+  founded: 1992,
+  institutionType: 'Public',
+  universityNumber: '#1',
   ranking: 'Top 15 UK University (Guardian University Guide 2021)',
   students: '38,000+',
   internationalStudents: '13,500+',
@@ -17,6 +21,14 @@ const universityData = {
   website: 'https://www.coventry.ac.uk',
   email: 'enquiries@coventry.ac.uk',
   phone: '+44 (0) 24 7765 7688',
+  latitude: 52.407536427761066,
+  longitude: -1.5021131609299423,
+  scholarships: [
+    'International Excellence Scholarship: Up to £2,000',
+    'Vice-Chancellor\'s Scholarship: Up to £10,000',
+    'EU Support Bursary: £1,000',
+    'Alumni Discount: 20% off tuition fees'
+  ]
 };
 
 const programsData = [
@@ -85,7 +97,7 @@ const UniversityDetail = () => {
     }, 500);
   }, [id, navigate]);
 
-  if (isLoading) {
+  if (isLoading || !university) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
@@ -106,20 +118,10 @@ const UniversityDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+      <Navbar className="fixed top-0 w-full z-50" />
       
-      {/* Back button */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-3">
-          <button 
-            onClick={() => window.history.back()}
-            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium"
-          >
-            <ArrowLeft size={16} className="mr-1" />
-            Back to results
-          </button>
-        </div>
-      </div>
+      {/* Main content wrapper with padding for fixed navbar */}
+      <div className="pt-16">
 
       {/* University Header */}
       <div className="bg-white border-b border-gray-200">
@@ -140,7 +142,6 @@ const UniversityDetail = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{university.name}</h1>
                 <div className="flex items-center text-gray-600 text-sm mt-1">
-                  <MapPin size={14} className="mr-1" />
                   {university.location}
                 </div>
               </div>
@@ -155,72 +156,115 @@ const UniversityDetail = () => {
       {/* Main Content */}
       <div className="flex-1 py-6">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Left Column */}
             <div className="lg:w-2/3">
+              {/* Scholarships Section */}
+              <div className="bg-white rounded-lg border border-gray-200 mb-6 overflow-hidden">
+                <div className="bg-blue-600 p-4">
+                  <h2 className="text-xl font-semibold text-white">Available Scholarships</h2>
+                </div>
+                <div className="p-6">
+                  {university?.scholarships?.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {university.scholarships.map((scholarship, index) => (
+                        <div key={index} className="flex items-start p-3 bg-gray-50 rounded-lg">
+                          <div className="bg-blue-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{scholarship.split(':')[0]}</p>
+                            <p className="text-sm text-gray-600">{scholarship.split(':').slice(1).join(':').trim()}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No scholarships available</p>
+                  )}
+                </div>
+              </div>
+
               {/* Tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8">
-                  <button
-                    onClick={() => setActiveTab('overview')}
-                    className={`${activeTab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    Overview
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('programs')}
-                    className={`${activeTab === 'programs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                  >
-                    Programs {programs.length > 0 && `(${programs.length})`}
-                  </button>
-                </nav>
+              <div className="flex border-b border-gray-200 mb-6">
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`px-4 py-2 text-sm font-medium ${activeTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Overview
+                </button>
+                <button
+                  onClick={() => setActiveTab('programs')}
+                  className={`px-4 py-2 text-sm font-medium ${activeTab === 'programs' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Programs
+                </button>
               </div>
 
               {/* Tab Content */}
               <div className="mt-6">
                 {activeTab === 'overview' ? (
-                  <div className="space-y-6">
-                    {/* Key Information */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Key Information</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    {/* About University */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">About {university.name}</h2>
+                      <div className="prose max-w-none text-gray-600">
+                        <p>{university.about}</p>
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                      <div className="space-y-4">
                         <div className="flex items-start">
-                          <div className="bg-blue-50 p-2 rounded-lg mr-3">
-                            <Award size={18} className="text-blue-600" />
-                          </div>
+                          <MapPin className="text-gray-500 mt-0.5 mr-3 flex-shrink-0" size={18} />
                           <div>
-                            <p className="text-sm text-gray-500">Ranking</p>
-                            <p className="text-gray-900 font-medium">{university.ranking}</p>
+                            <p className="font-medium text-gray-900">Address</p>
+                            <p className="text-gray-600">{university.address}</p>
                           </div>
                         </div>
                         <div className="flex items-start">
-                          <div className="bg-blue-50 p-2 rounded-lg mr-3">
-                            <Users size={18} className="text-blue-600" />
-                          </div>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mt-0.5 mr-3 flex-shrink-0">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                          </svg>
                           <div>
-                            <p className="text-sm text-gray-500">Total Students</p>
-                            <p className="text-gray-900 font-medium">{university.students}</p>
+                            <p className="font-medium text-gray-900">Phone</p>
+                            <a href={`tel:${university.phone.replace(/\D/g, '')}`} className="text-blue-600 hover:underline">
+                              {university.phone}
+                            </a>
                           </div>
                         </div>
                         <div className="flex items-start">
-                          <div className="bg-blue-50 p-2 rounded-lg mr-3">
-                            <Globe size={18} className="text-blue-600" />
-                          </div>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mt-0.5 mr-3 flex-shrink-0">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                          </svg>
                           <div>
-                            <p className="text-sm text-gray-500">International Students</p>
-                            <p className="text-gray-900 font-medium">{university.internationalStudents}</p>
+                            <p className="font-medium text-gray-900">Email</p>
+                            <a href={`mailto:${university.email}`} className="text-blue-600 hover:underline">
+                              {university.email}
+                            </a>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mt-0.5 mr-3 flex-shrink-0">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                          </svg>
+                          <div>
+                            <p className="font-medium text-gray-900">Website</p>
+                            <a href={university.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              {university.website.replace(/^https?:\/\//, '')}
+                            </a>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* About University */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">About {university.name}</h2>
-                      <div className="prose max-w-none text-gray-600">
-                        <p className="mb-4">{university.about}</p>
-                      </div>
-                    </div>
+
                   </div>
                 ) : (
                   <div>
@@ -284,7 +328,7 @@ const UniversityDetail = () => {
                                 </div>
                                 <a
                                   href={`/apply?university=${encodeURIComponent(university.name)}&program=${encodeURIComponent(program.title)}`}
-                                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                   Apply Now
                                   <ExternalLink size={16} className="ml-2" />
@@ -305,8 +349,8 @@ const UniversityDetail = () => {
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="lg:w-1/3 space-y-4">
+            {/* Right Column - Sticky Sidebar */}
+            <div className="lg:w-1/3 space-y-4 lg:sticky lg:top-24">
               {/* Contact Card */}
               <div className="bg-white border border-gray-200 rounded-lg p-5">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
@@ -373,33 +417,113 @@ const UniversityDetail = () => {
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  Chat with University
-                </button>
-                <button className="w-full border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  Download Brochure
-                </button>
+              {/* University Details */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">University Details</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <MapPin size={16} className="text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Address</p>
+                      <p className="text-gray-900 text-sm">{university.address}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Founded</p>
+                      <p className="text-gray-900 text-sm">{university.founded}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Institution Type</p>
+                      <p className="text-gray-900 text-sm">{university.institutionType}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">University Rank</p>
+                      <p className="text-gray-900 text-sm">{university.universityNumber}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Map Placeholder */}
-              <div className="bg-gray-100 rounded-lg h-40 flex items-center justify-center text-gray-400 text-sm">
-                Map View
+              {/* University Details */}
+              <div className="bg-white border border-gray-200 rounded-lg">
+                <div className="bg-gray-800 p-4">
+                  <h3 className="text-lg font-semibold text-white">Quick Facts</h3>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Founded</p>
+                      <p className="text-gray-900 font-medium">{university.founded}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Institution Type</p>
+                      <p className="text-gray-900 font-medium">{university.institutionType}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">University Rank</p>
+                      <p className="text-gray-900 font-medium">{university.universityNumber}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        </div>
       </div>
-
       <Footer />
     </div>
   );
