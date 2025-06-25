@@ -27,9 +27,9 @@ function App() {
     { path: "/verify-otp", element: <Suspense fallback={<div>Loading...</div>}><VerifyOtp /></Suspense> },
     { path: "/dashboard", element: <Suspense fallback={<div>Loading...</div>}><Dashboard /></Suspense> },
     { path: "/universities", element: <Suspense fallback={<div>Loading...</div>}><Universities /></Suspense> },
-    { path: "/university/:id", element: <Suspense fallback={<div>Loading...</div>}><UniversityDetail /></Suspense> },
+    { path: "/university/1", element: <Suspense fallback={<div>Loading...</div>}><UniversityDetail /></Suspense> },
     { path: "/course/:id", element: <Suspense fallback={<div>Loading...</div>}><CourseDetail /></Suspense> },
-    { path: "/courses", element: <Suspense fallback={<div>Loading...</div>}><Courses /></Suspense> },
+    { path: "/programs", element: <Suspense fallback={<div>Loading...</div>}><Courses /></Suspense> },
   ];
 
   return (
