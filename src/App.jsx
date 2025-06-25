@@ -12,6 +12,9 @@ const Register = lazy(() => import("./core/public/Register"));
 const VerifyOtp = lazy(() => import("./core/public/VerifyOtp"));
 const Dashboard = lazy(() => import("./core/public/Dashboard"));
 const UniversityDetail = lazy(() => import("./core/public/UniversityDetail"));
+const CourseDetail = lazy(() => import("./core/public/CourseDetail"));
+const Universities = lazy(() => import("./core/public/Universities"));
+const Courses = lazy(() => import("./core/public/Courses"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -23,7 +26,10 @@ function App() {
     { path: "/register", element: <Suspense fallback={<div>Loading...</div>}><Register /></Suspense> },
     { path: "/verify-otp", element: <Suspense fallback={<div>Loading...</div>}><VerifyOtp /></Suspense> },
     { path: "/dashboard", element: <Suspense fallback={<div>Loading...</div>}><Dashboard /></Suspense> },
+    { path: "/universities", element: <Suspense fallback={<div>Loading...</div>}><Universities /></Suspense> },
     { path: "/university/:id", element: <Suspense fallback={<div>Loading...</div>}><UniversityDetail /></Suspense> },
+    { path: "/course/:id", element: <Suspense fallback={<div>Loading...</div>}><CourseDetail /></Suspense> },
+    { path: "/courses", element: <Suspense fallback={<div>Loading...</div>}><Courses /></Suspense> },
   ];
 
   return (

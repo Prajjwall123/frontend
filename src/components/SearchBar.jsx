@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 
-const SearchBar = ({ 
+const SearchBar = ({
   filters = {},
   filterOptions = {},
-  onFilterChange = () => {}
+  onFilterChange = () => { }
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -33,7 +33,7 @@ const SearchBar = ({
             type="text"
             value={searchTerm}
             onChange={handleInputChange}
-            placeholder="Search for programs, universities, or subjects"
+            placeholder="Search for programs"
             className="block w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400 text-base"
           />
           <button
