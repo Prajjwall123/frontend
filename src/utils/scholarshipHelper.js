@@ -29,11 +29,17 @@ const getScholarshipsByIds = async (ids) => {
 
 const getScholarshipsByUniversityId = async (universityId) => {
     try {
+        console.log(`Fetching scholarships for university ID: ${universityId}`);
         const response = await API.get(`/scholarships/university/${universityId}`);
-        // Return the nested scholarships array from the response
-        return response.data?.scholarships || [];
+        console.log('Scholarships API response:', response);
+        // The response is an object with a scholarships array
+        return Array.isArray(response.data?.scholarships) ? response.data.scholarships : [];
     } catch (error) {
-        console.error(`Error fetching scholarships for university ${universityId}:`, error);
+        console.error(`Error fetching scholarships for university ${universityId}:`, {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
         return [];
     }
 };

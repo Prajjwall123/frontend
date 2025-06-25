@@ -20,31 +20,14 @@ const universityData = {
   logo: 'https://www.coventry.ac.uk/wp-content/themes/covuni/dist/images/logo.png',
   website: 'https://www.coventry.ac.uk',
   email: 'enquiries@coventry.ac.uk',
-  phone: '+44 (0)24 7765 7688',
+  phone: '+44 (0) 24 7765 7688',
   latitude: 52.407536427761066,
   longitude: -1.5021131609299423,
   scholarships: [
-    {
-      scholarship_name: 'International Excellence Scholarship',
-      institute: 'Coventry University',
-      amount_per_year: 2000
-    },
-    {
-      scholarship_name: 'Vice-Chancellor\'s Scholarship',
-      institute: 'Coventry University',
-      amount_per_year: 10000
-    },
-    {
-      scholarship_name: 'EU Support Bursary',
-      institute: 'Coventry University',
-      amount_per_year: 1000
-    },
-    {
-      scholarship_name: 'Alumni Discount',
-      institute: 'Coventry University',
-      amount_per_year: 0.2, // 20% of tuition fees
-      isPercentage: true
-    }
+    'International Excellence Scholarship: Up to £2,000',
+    'Vice-Chancellor\'s Scholarship: Up to £10,000',
+    'EU Support Bursary: £1,000',
+    'Alumni Discount: 20% off tuition fees'
   ]
 };
 
@@ -103,11 +86,16 @@ const UniversityDetail = () => {
 
   useEffect(() => {
     setIsLoading(true);
+
     // Simulate API call
     setTimeout(() => {
+      // if (id !== '1') {
+      //   // Redirect to home if not the expected ID
+      //   navigate('/');
+      // }
       setIsLoading(false);
     }, 500);
-  }, [id]);
+  }, [id, navigate]);
 
   if (isLoading || !university) {
     return (
@@ -141,7 +129,7 @@ const UniversityDetail = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-white rounded-lg border border-gray-200 flex items-center justify-center p-1">
-                  {/* <img
+                  <img
                     src={university.logo}
                     alt={`${university.name} logo`}
                     className="max-w-full max-h-full object-contain"
@@ -149,7 +137,7 @@ const UniversityDetail = () => {
                       e.target.onerror = null;
                       e.target.src = 'https://via.placeholder.com/64?text=Logo';
                     }}
-                  /> */}
+                  />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{university.name}</h1>
@@ -172,30 +160,33 @@ const UniversityDetail = () => {
               {/* Left Column */}
               <div className="lg:w-2/3">
                 {/* Scholarships Section */}
-                {university.scholarships && university.scholarships.length > 0 && (
-                  <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Scholarships & Funding</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {university.scholarships.map((scholarship, index) => (
-                        <div key={index} className="flex items-start p-3 bg-gray-50 rounded-lg h-full">
-                          <div className="bg-blue-100 p-2 rounded-full mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
-                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{scholarship.scholarship_name}</p>
-                            <p className="text-sm text-gray-600">
-                              {scholarship.institute} • {scholarship.isPercentage
-                                ? `${scholarship.amount_per_year * 100}% of tuition`
-                                : `£${scholarship.amount_per_year.toLocaleString()} per year`}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="bg-white rounded-lg border border-gray-200 mb-6 overflow-hidden">
+                  <div className="bg-blue-600 p-4">
+                    <h2 className="text-xl font-semibold text-white">Available Scholarships</h2>
                   </div>
-                )}
+                  <div className="p-6">
+                    {university?.scholarships?.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {university.scholarships.map((scholarship, index) => (
+                          <div key={index} className="flex items-start p-3 bg-gray-50 rounded-lg">
+                            <div className="bg-blue-100 p-2 rounded-full mr-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{scholarship.split(':')[0]}</p>
+                              <p className="text-sm text-gray-600">{scholarship.split(':').slice(1).join(':').trim()}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No scholarships available</p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Tabs */}
                 <div className="flex border-b border-gray-200 mb-6">
                   <button
@@ -237,8 +228,7 @@ const UniversityDetail = () => {
                           </div>
                           <div className="flex items-start">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 mt-0.5 mr-3 flex-shrink-0">
-                              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                              <polyline points="22,6 12,13 2,6"></polyline>
+                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                             </svg>
                             <div>
                               <p className="font-medium text-gray-900">Phone</p>
