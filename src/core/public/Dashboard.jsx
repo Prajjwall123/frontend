@@ -1,60 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getCourses } from "../../utils/coursesHelper";
 import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
 import Sidebar from "../../components/Sidebar";
 import UniversityCard from "../../components/UniversityCard";
-import coventryLogo from "../../assets/coventry_logo.png";
-import alexanderLogo from "../../assets/alexander_logo.png";
-import constogaLogo from "../../assets/constoga_logo.png";
 import { SlidersHorizontal, LayoutGrid, List, ChevronDown, Filter } from "lucide-react";
 import Footer from "../../components/Footer";
-
-const sampleCards = [
-  {
-    id: 'coventry-university',
-    logo: coventryLogo,
-    university: "Coventry University",
-    level: "Postgraduate Certificate",
-    program: "Graduate Certificate-International Business",
-    location: "Coventry, ENG",
-    tuition: "$13,640",
-    applicationFee: "$125",
-    duration: "24 months",
-  },
-  {
-    id: 'alexander-college',
-    logo: alexanderLogo,
-    university: "Alexander College Burnaby",
-    level: "Undergraduate Diploma",
-    program: "Associate of Arts-Psychology",
-    location: "British Columbia, CAN",
-    tuition: "$13,640",
-    applicationFee: "$125",
-    duration: "24 months",
-  },
-  {
-    id: 'constoga-college',
-    logo: constogaLogo,
-    university: "Constoga College Don",
-    level: "Undergraduate Diploma",
-    program: "College Diploma- Office Administration",
-    location: "Ontario, CAN",
-    tuition: "$13,640",
-    applicationFee: "$125",
-    duration: "24 months",
-  },
-  {
-    id: 'uts-sydney',
-    logo: coventryLogo, // Using existing logo for now
-    university: "University of Technology Sydney",
-    level: "Master's Degree",
-    program: "Master of Data Science and Innovation",
-    location: "Sydney, AUS",
-    tuition: "$42,000",
-    applicationFee: "$150",
-    duration: "24 months",
-  },
-];
 
 // Helper function to extract unique values from university data
 const extractUniqueValues = (data, key) => {
@@ -64,17 +16,38 @@ const extractUniqueValues = (data, key) => {
 
 // Helper function to extract countries from location strings
 const extractCountries = (data) => {
-  const countries = data.map(item => {
-    const parts = item.location?.split(', ');
-    return parts?.length > 1 ? parts[1] : '';
-  });
+  const countries = data.map(item => item.university?.country || '');
   return ['All Countries', ...new Set(countries)].filter(Boolean);
 };
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+
+  // Fetch courses using React Query
+  const { data: courses = [], isLoading } = useQuery({
+    queryKey: ['courses'],
+    queryFn: getCourses,
+  });
+
+  // Transform course data to match the existing card structure
+  const sampleCards = React.useMemo(() => {
+    return courses.map(course => ({
+      id: course._id,
+      logo: course.university?.photo ? `http://localhost:3000${course.university.photo}` : null,
+      university: course.university?.name || 'University',
+      level: course.course_level ?
+        course.course_level.charAt(0).toUpperCase() + course.course_level.slice(1) :
+        'Program',
+      program: course.course_name || 'Course',
+      location: course.university?.location || 'Location not specified',
+      tuition: course.course_tuition ? `$${course.course_tuition.toLocaleString()}` : 'Contact for pricing',
+      applicationFee: course.application_fee ? `$${course.application_fee}` : 'No fee',
+      duration: course.course_duration || 'Duration not specified',
+      country: course.university?.country || ''
+    }));
+  }, [courses]);
+
   // Filter state
   const [filters, setFilters] = useState({
     country: 'All Countries',
@@ -86,31 +59,30 @@ const Dashboard = () => {
     durations: []
   });
 
-  // Extract filter options from sample data
-  const filterOptions = {
+  // Extract filter options from real data
+  const filterOptions = React.useMemo(() => ({
     countries: extractCountries(sampleCards),
     levels: extractUniqueValues(sampleCards, 'level'),
-    subjects: extractUniqueValues(sampleCards, 'program').flatMap(program => 
-      program.split(' ').map(word => word.replace(/[^a-zA-Z]/g, ''))
-    ).filter((value, index, self) => self.indexOf(value) === index && value.length > 3).slice(0, 10),
+    subjects: extractUniqueValues(
+      sampleCards.flatMap(card =>
+        (card.program?.split(' ') || []).map(word => word.replace(/[^a-zA-Z]/g, ''))
+      )
+        .filter((value, index, self) => self.indexOf(value) === index && value.length > 3)
+        .slice(0, 10),
+      ''
+    ),
     durations: extractUniqueValues(sampleCards, 'duration')
-  };
+  }), [sampleCards]);
 
   // Apply filters to university data
-  const filteredCards = sampleCards.filter(card => {
-    // Extract country from location (e.g., "Coventry, ENG" -> "ENG")
-    const cardCountry = card.location?.split(', ')[1] || '';
-    const cardDuration = card.duration?.split(' ')[0];
-    
-    return (
-      (filters.country === 'All Countries' || cardCountry === filters.country.split(' ').pop()) &&
-      (filters.level === 'All' || card.level?.includes(filters.level)) &&
-      (filters.subject === 'All' || card.program?.toLowerCase().includes(filters.subject.toLowerCase())) &&
-      (filters.duration === 'All' || cardDuration === filters.duration.split(' ')[0]) &&
-      (filters.programLevels.length === 0 || filters.programLevels.some(level => card.level?.includes(level))) &&
-      (filters.locations.length === 0 || filters.locations.some(loc => card.location?.includes(loc)))
-    );
-  });
+  const filteredCards = React.useMemo(() => {
+    return sampleCards.filter(card => {
+      const matchesCountry = filters.country === 'All Countries' || card.country === filters.country;
+      const matchesLevel = filters.level === 'All' || card.level === filters.level;
+      // Add more filter conditions as needed
+      return matchesCountry && matchesLevel;
+    });
+  }, [sampleCards, filters]);
 
   // Handle filter changes from SearchBar
   const handleSearchFilterChange = (filterName, value) => {
@@ -130,11 +102,23 @@ const Dashboard = () => {
     }));
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="pt-16"></div>
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header and Search */}
         <div className="mb-8">
@@ -145,14 +129,14 @@ const Dashboard = () => {
                 <p className="text-gray-500 mt-1">Browse and compare programs from top universities</p>
               </div>
               <div className="flex items-center gap-3 mt-4 md:mt-0">
-                <button 
+                <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-gray-100 text-[#05213b]' : 'text-gray-400 hover:bg-gray-50'}`}
                   aria-label="List view"
                 >
                   <List size={20} />
                 </button>
-                <button 
+                <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-gray-100 text-[#05213b]' : 'text-gray-400 hover:bg-gray-50'}`}
                   aria-label="Grid view"
@@ -161,7 +145,7 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-            <SearchBar 
+            <SearchBar
               filters={{
                 country: filters.country,
                 level: filters.level,
@@ -181,7 +165,7 @@ const Dashboard = () => {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Mobile Filters Button */}
-          <button 
+          <button
             onClick={() => setShowMobileFilters(!showMobileFilters)}
             className="lg:hidden flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
@@ -191,7 +175,7 @@ const Dashboard = () => {
 
           {/* Sidebar - Hidden on mobile when filters are closed */}
           <div className={`${showMobileFilters ? 'block' : 'hidden'} lg:block lg:w-1/4`}>
-            <Sidebar 
+            <Sidebar
               filters={{
                 programLevels: filters.programLevels,
                 locations: filters.locations,
@@ -231,10 +215,10 @@ const Dashboard = () => {
             <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' : 'space-y-4'} gap-6`}>
               {filteredCards.length > 0 ? (
                 filteredCards.map((card) => (
-                  <UniversityCard 
-                    key={card.id} 
-                    {...card} 
-                    viewMode={viewMode} 
+                  <UniversityCard
+                    key={card.id}
+                    {...card}
+                    viewMode={viewMode}
                   />
                 ))
               ) : (
@@ -251,11 +235,10 @@ const Dashboard = () => {
                 Previous
               </button>
               {[1, 2, 3, '...', 8].map((page, i) => (
-                <button 
+                <button
                   key={i}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium ${
-                    page === 1 ? 'bg-[#05213b] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium ${page === 1 ? 'bg-[#05213b] text-white' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   {page}
                 </button>
@@ -267,7 +250,7 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
-      
+
       {/* Footer */}
       <Footer />
     </div>
