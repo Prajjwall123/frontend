@@ -4,6 +4,7 @@ import { Search, MapPin, BookOpen, Users, Award, Map } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { getUniversities } from '../../utils/universityHelper';
+import cover from '../../assets/cover.jpg';
 
 const Universities = () => {
   const [universities, setUniversities] = useState([]);
@@ -139,10 +140,18 @@ const Universities = () => {
 
       <div className="flex-1 pt-16">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Find Your Perfect University</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-6">
+        <div
+          className="relative py-24 bg-cover bg-center"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${cover})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">Find Your Perfect University</h1>
+            <p className="text-xl text-gray-200 max-w-3xl mx-auto mb-6">
               Discover and compare universities from around the world to find your ideal academic path.
             </p>
             <form
