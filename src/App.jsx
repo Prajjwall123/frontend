@@ -17,6 +17,7 @@ const Universities = lazy(() => import("./core/public/Universities"));
 const Courses = lazy(() => import("./core/public/Courses"));
 const UniversityDetailDynamic = lazy(() => import("./core/public/UniversityDetailDynamic"));
 const ProfileStepper = lazy(() => import("./core/private/ProfileStepper"));
+const SOPWriter = lazy(() => import("./core/public/SOPWriter"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -34,6 +35,7 @@ function App() {
     { path: "/course/:id", element: <Suspense fallback={<div>Loading...</div>}><CourseDetail /></Suspense> },
     { path: "/programs", element: <Suspense fallback={<div>Loading...</div>}><Courses /></Suspense> },
     { path: "/profile", element: <Suspense fallback={<div>Loading...</div>}><ProfileStepper /></Suspense> },
+    { path: "/sop-writer", element: <Suspense fallback={<div>Loading...</div>}><SOPWriter /></Suspense> },
   ];
 
   return (

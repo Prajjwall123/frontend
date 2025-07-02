@@ -1,6 +1,6 @@
 // src/core/private/profile-steps/EnglishTestStep.jsx
 import React, { useState, useEffect } from 'react';
-import { BookOpen, AlertCircle, CheckCircle, Upload, Calendar } from 'lucide-react';
+import { BookOpen, Calendar } from 'lucide-react';
 
 const EnglishTestStep = ({ formData, handleChange }) => {
     const [testType, setTestType] = useState(formData.englishTest?.testType || '');
@@ -133,8 +133,8 @@ const EnglishTestStep = ({ formData, handleChange }) => {
                             <label
                                 key={type.id}
                                 className={`relative border rounded-md p-3 flex items-center space-x-3 cursor-pointer transition-colors ${testType === type.id
-                                    ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                                    : 'border-gray-300 hover:border-blue-300'
+                                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                                        : 'border-gray-300 hover:border-blue-300'
                                     }`}
                             >
                                 <input
@@ -176,50 +176,6 @@ const EnglishTestStep = ({ formData, handleChange }) => {
                         </div>
 
                         {renderScoreInputs()}
-
-                        {/* Test Report Form Upload */}
-                        <div className="space-y-1.5">
-                            <label className="block text-sm font-medium text-gray-700">
-                                Upload Test Report Form (Optional)
-                            </label>
-                            <div className="relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Upload className="h-4 w-4 text-gray-400" />
-                                </div>
-                                <input
-                                    type="file"
-                                    name="englishTest.testReport"
-                                    onChange={(e) => {
-                                        handleChange({
-                                            target: {
-                                                name: 'englishTest.testReport',
-                                                value: e.target.files[0]
-                                            }
-                                        });
-                                    }}
-                                    className="block w-full text-sm text-gray-500 pl-10 py-2.5 border border-gray-300 rounded-md file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-blue-600 hover:file:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                />
-                            </div>
-                            <p className="text-xs text-gray-500">
-                                Accepted formats: PDF, JPG, PNG (Max size: 5MB)
-                            </p>
-                        </div>
-
-                        {/* Test Reference Number */}
-                        <div className="space-y-1.5">
-                            <label className="block text-sm font-medium text-gray-700">
-                                Test Reference Number (Optional)
-                            </label>
-                            <input
-                                type="text"
-                                name="englishTest.referenceNumber"
-                                value={formData.englishTest?.referenceNumber || ''}
-                                onChange={handleChange}
-                                className="block w-full px-3 py-2.5 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter your test reference number"
-                            />
-                        </div>
                     </>
                 )}
             </div>

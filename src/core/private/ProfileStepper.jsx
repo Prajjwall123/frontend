@@ -1,13 +1,15 @@
 // src/core/private/ProfileStepper.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, User, Book, Globe, FileText, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Check, User, Book, Globe, FileText, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import PersonalInfoStep from './profile-steps/PersonalInfoStep';
 import EducationStep from './profile-steps/EducationStep';
 import VisaStep from './profile-steps/VisaStep';
 import EnglishTestStep from './profile-steps/EnglishTestStep';
+import { updateProfile, getProfile } from '../../utils/profileHelper';
 
 // Import the profile side image
 import profileImage from '../../assets/profile-side-image.jpg';
@@ -21,48 +23,99 @@ const steps = [
 
 const ProfileStepper = () => {
     const [activeStep, setActiveStep] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         // Personal Info
-        fullName: '',
-        email: '',
-        phone: '',
-        dateOfBirth: '',
+        gender: '',
         address: '',
         city: '',
-        country: '',
-        gender: '',
+        date_of_birth: '',
+        first_language: '',
+        passport_number: '',
 
         // Education
-        highestEducation: '',
-        institution: '',
-        fieldOfStudy: '',
-        graduationYear: '',
-        gpa: '',
+        institution_name: '',
+        field_of_study: '',
+        highest_education_level: '',
+        graduation_year: '',
+        final_grade: '',
+        currently_enrolled: false,
+        graduation_status: false,
 
         // Visa
-        hasPreviousVisa: false,
-        visaCountry: '',
-        visaType: '',
-        visaStatus: '',
+        visa_application_country: '',
+        visa_type: '',
+        application_date: '',
+        status: '',
+        currently_hold_a_visa: false,
+        previous_visa_application: false,
+        application_country: '',
+        application_year: '',
 
         // English Test
-        englishTest: {
-            testType: '',
-            overallScore: '',
+        english_test: {
+            test_type: '',
             reading: '',
             writing: '',
             speaking: '',
             listening: '',
-            testDate: '',
-            testReport: null
+            exam_date: ''
         },
     });
 
-    const handleNext = () => {
-        if (activeStep < steps.length - 1) {
-            setActiveStep(prev => prev + 1);
-        } else {
-            handleSubmit();
+    // Load profile data on component mount
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const profile = await getProfile();
+                if (profile) {
+                    setFormData(prev => ({
+                        ...prev,
+                        ...profile,
+                        // Ensure nested objects are properly merged
+                        english_test: {
+                            ...prev.english_test,
+                            ...(profile.english_test || {})
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                toast.error('Failed to load profile data');
+            }
+        };
+
+        loadProfile();
+    }, []);
+
+    // Save form data whenever it changes
+    const saveFormData = async (data) => {
+        try {
+            setIsSubmitting(true);
+            await updateProfile(data);
+            return true;
+        } catch (error) {
+            console.error('Error saving form data:', error);
+            toast.error(error.message || 'Failed to save data');
+            return false;
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleNext = async (e) => {
+        if (e) e.preventDefault();
+
+        // Save current step data before proceeding
+        const success = await saveFormData(formData);
+        if (success) {
+            if (activeStep < steps.length - 1) {
+                setActiveStep(prev => prev + 1);
+            } else {
+                // If it's the last step, show success message
+                toast.success('Profile updated successfully!');
+                console.log('Profile update complete');
+            }
         }
     };
 
@@ -72,33 +125,74 @@ const ProfileStepper = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         if (e) e.preventDefault();
-        console.log('Form submitted:', formData);
-        // Handle form submission
-    };
 
-    const handleChange = (e) => {
-        const { name, value, type, checked, files } = e.target;
-
-        if (name.includes('.')) {
-            const [parent, child] = name.split('.');
-            setFormData(prev => ({
-                ...prev,
-                [parent]: {
-                    ...prev[parent],
-                    [child]: type === 'file' ? files[0] : value
-                }
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: type === 'checkbox' ? checked : value
-            }));
+        const success = await saveFormData(formData);
+        if (success) {
+            toast.success('Profile updated successfully!');
+            // Navigate to dashboard or show success message
+            console.log('Profile update complete');
         }
     };
 
-    const CurrentStep = steps[activeStep]?.component;
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+
+        setFormData(prev => {
+            // Handle nested fields (e.g., english_test.reading)
+            if (name.includes('.')) {
+                const [parent, child] = name.split('.');
+                return {
+                    ...prev,
+                    [parent]: {
+                        ...(prev[parent] || {}), // Preserve existing nested object
+                        [child]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
+                    }
+                };
+            }
+
+            // Handle date fields
+            if (name === 'date_of_birth' || name === 'application_date' || name === 'exam_date') {
+                return {
+                    ...prev,
+                    [name]: value ? new Date(value).toISOString().split('T')[0] : ''
+                };
+            }
+
+            // Handle regular fields
+            if (type === 'checkbox') {
+                return {
+                    ...prev,
+                    [name]: checked
+                };
+            }
+
+            // Handle number fields
+            if (type === 'number') {
+                return {
+                    ...prev,
+                    [name]: value === '' ? '' : Number(value)
+                };
+            }
+
+            // Default case for text/select fields
+            return {
+                ...prev,
+                [name]: value
+            };
+        });
+    };
+
+    const renderStepContent = (step) => {
+        const StepComponent = steps[step].component;
+        return (
+            <StepComponent
+                formData={formData}
+                handleChange={handleChange}
+            />
+        );
+    };
 
     if (activeStep >= steps.length) {
         return (
@@ -125,10 +219,6 @@ const ProfileStepper = () => {
                 <Footer />
             </div>
         );
-    }
-
-    if (!CurrentStep) {
-        return <Navigate to="/profile" replace />;
     }
 
     return (
@@ -218,12 +308,12 @@ const ProfileStepper = () => {
                                     </nav>
                                 </div>
 
-                                <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="flex-1 flex flex-col">
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    await handleNext();
+                                }} className="flex-1 flex flex-col">
                                     <div className="flex-1">
-                                        <CurrentStep
-                                            formData={formData}
-                                            handleChange={handleChange}
-                                        />
+                                        {renderStepContent(activeStep)}
                                     </div>
 
                                     <div className="mt-auto pt-6 border-t border-gray-100">
@@ -234,15 +324,25 @@ const ProfileStepper = () => {
                                                 disabled={activeStep === 0}
                                                 className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md ${activeStep === 0 ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-50'} transition-colors`}
                                             >
-                                                <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Back
+                                                <ChevronLeft className={`h-3.5 w-3.5 mr-1 ${activeStep === 0 ? 'text-gray-400' : 'text-gray-700'}`} />
+                                                Back
                                             </button>
 
                                             <button
                                                 type="submit"
-                                                className="inline-flex items-center px-4 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500 transition-colors"
+                                                disabled={isSubmitting}
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                                                {activeStep < steps.length - 1 && <ChevronRight className="h-3.5 w-3.5 ml-1" />}
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                                                        Saving...
+                                                    </>
+                                                ) : activeStep === steps.length - 1 ? (
+                                                    'Submit'
+                                                ) : (
+                                                    'Save & Continue'
+                                                )}
                                             </button>
                                         </div>
                                     </div>

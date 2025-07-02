@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Phone, Calendar, MapPin, Home, MapPin as Pin } from 'lucide-react';
+import { User, Mail, Calendar, MapPin, Home } from 'lucide-react';
 
 const PersonalInfoStep = ({ formData, handleChange }) => {
     return (
@@ -51,25 +51,6 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* Phone */}
-                    <div className="space-y-1">
-                        <label className="block text-xs font-medium text-gray-700">Phone</label>
-                        <div className="relative rounded-md shadow-sm">
-                            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                                <Phone className="h-3.5 w-3.5 text-gray-400" />
-                            </div>
-                            <input
-                                type="tel"
-                                name="phone"
-                                value={formData.phone || ''}
-                                onChange={handleChange}
-                                className="block w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="+1 (555) 000-0000"
-                                required
-                            />
-                        </div>
-                    </div>
-
                     {/* Date of Birth */}
                     <div className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700">Date of Birth</label>
@@ -87,9 +68,7 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                             />
                         </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Gender */}
                     <div className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700">Gender</label>
@@ -105,41 +84,10 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                                 required
                             >
                                 <option value="">Select gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                                <option value="prefer-not-to-say">Prefer not to say</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-                                <svg className="h-3.5 w-3.5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Country */}
-                    <div className="space-y-1">
-                        <label className="block text-xs font-medium text-gray-700">Country</label>
-                        <div className="relative rounded-md shadow-sm">
-                            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                                <Pin className="h-3.5 w-3.5 text-gray-400" />
-                            </div>
-                            <select
-                                name="country"
-                                value={formData.country || ''}
-                                onChange={handleChange}
-                                className="appearance-none block w-full pl-8 pr-8 py-2 text-xs border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                required
-                            >
-                                <option value="">Select country</option>
-                                <option value="US">United States</option>
-                                <option value="CA">Canada</option>
-                                <option value="UK">United Kingdom</option>
-                                <option value="AU">Australia</option>
-                                <option value="IN">India</option>
-                                <option value="NP">Nepal</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                                 <option value="Other">Other</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
                             </select>
                             <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
                                 <svg className="h-3.5 w-3.5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
