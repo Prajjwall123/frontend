@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Copy, Save, Bold, Italic, Underline, MessageSquare, Bot, User, Sparkles, ExternalLink } from 'lucide-react';
+import { Send, Copy, Save, MessageSquare, Bot, User, Sparkles, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -20,43 +20,12 @@ const SOPWriter = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdatingEssay, setIsUpdatingEssay] = useState(false);
     const textareaRef = useRef(null);
-    const messagesEndRef = useRef(null);
     const navigate = useNavigate();
 
     // Course details (replace with dynamic data later)
     const courseName = 'Computer Science';
     const universityName = 'Stanford University';
     const courseId = 'cs101';
-
-    const handleFormat = (format) => {
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selectedText = content.substring(start, end);
-        let newText = content;
-
-        switch (format) {
-            case 'bold':
-                newText = `${content.substring(0, start)}**${selectedText}**${content.substring(end)}`;
-                break;
-            case 'italic':
-                newText = `${content.substring(0, start)}*${selectedText}*${content.substring(end)}`;
-                break;
-            case 'underline':
-                newText = `${content.substring(0, start)}_${selectedText}_${content.substring(end)}`;
-                break;
-            default:
-                break;
-        }
-
-        setContent(newText);
-        textarea.focus();
-        // Set cursor position after the formatted text
-        setTimeout(() => {
-            textarea.selectionStart = start + (format === 'bold' ? 2 : 1);
-            textarea.selectionEnd = end + (format === 'bold' ? 2 : 1);
-        }, 0);
-    };
 
     const handleViewCourse = () => {
         navigate(`/course/${courseId}`);
@@ -142,11 +111,6 @@ const SOPWriter = () => {
         alert('SOP submitted successfully!');
     };
 
-    // Auto-scroll to bottom of chat
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
-
     // Word and character count
     const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
     const characterCount = content.length;
@@ -175,30 +139,15 @@ const SOPWriter = () => {
                 {/* Main Content */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Left Side - Editor */}
-                    <div className="flex-1 flex flex-col border-r border-gray-200">
+                    <div className="flex-1 flex flex-col border-r border-gray-200 overflow-hidden">
                         {/* Toolbar */}
-                        <div className="border-b border-gray-200 bg-gray-50 p-2 flex items-center gap-2">
-                            <button
-                                onClick={() => handleFormat('bold')}
-                                className="p-2 rounded hover:bg-gray-200 text-gray-900"
-                                title="Bold (Ctrl+B)"
-                            >
-                                <Bold size={16} className="text-gray-900" />
-                            </button>
-                            <button
-                                onClick={() => handleFormat('italic')}
-                                className="p-2 rounded hover:bg-gray-200 text-gray-900"
-                                title="Italic (Ctrl+I)"
-                            >
-                                <Italic size={16} className="text-gray-900" />
-                            </button>
-                            <button
-                                onClick={() => handleFormat('underline')}
-                                className="p-2 rounded hover:bg-gray-200 text-gray-900"
-                                title="Underline (Ctrl+U)"
-                            >
-                                <Underline size={16} className="text-gray-900" />
-                            </button>
+                        <div className="border-b border-gray-200 bg-gray-50 p-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                {/* Formatting buttons have been removed */}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                                {wordCount} words • {characterCount} characters
+                            </div>
                         </div>
 
                         {/* Editor */}
@@ -216,17 +165,18 @@ const SOPWriter = () => {
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
                                     placeholder="Start writing your Statement of Purpose here..."
+                                    style={{
+                                        minHeight: 'calc(100vh - 20rem)',
+                                        height: 'auto',
+                                        resize: 'none',
+                                        overflow: 'auto'
+                                    }}
                                 />
                             </div>
                         </div>
 
                         {/* Footer */}
                         <div className="border-t border-gray-200 bg-gray-50 px-4 py-3">
-                            <div className="flex justify-end mb-2">
-                                <div className="text-sm text-gray-500">
-                                    {wordCount} words • {characterCount} characters
-                                </div>
-                            </div>
                             <div className="flex justify-center">
                                 <button
                                     onClick={handleSubmit}
@@ -239,87 +189,60 @@ const SOPWriter = () => {
                         </div>
                     </div>
 
-                    {/* Right Side - Chat Interface */}
-                    <div className="w-96 border-l border-gray-200 bg-white flex flex-col h-full">
+                    {/* Right Side - Chat */}
+                    <div className="w-80 flex flex-col border-l border-gray-200 overflow-hidden">
                         {/* Chat Header */}
-                        <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-full bg-blue-100 text-blue-600">
-                                    <MessageSquare size={20} />
-                                </div>
-                                <div>
-                                    <h2 className="font-medium text-gray-900">SOP Assistant</h2>
-                                    <p className="text-xs text-gray-500">Ask me anything about your SOP</p>
-                                </div>
+                        <div className="border-b border-gray-200 p-4 flex items-center justify-between bg-gray-50 flex-shrink-0">
+                            <h2 className="text-lg font-medium text-gray-900">SOP Assistant</h2>
+                            <div className="flex items-center">
+                                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                <span className="text-sm text-gray-500">Online</span>
                             </div>
                         </div>
 
                         {/* Chat Messages */}
-                        <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 22rem)' }}>
-                            <div className="p-4 space-y-4">
-                                {/* In your message rendering JSX */}
+                        <div className="flex-1 overflow-y-auto p-4" style={{ minHeight: 0 }}>
+                            <div className="space-y-4">
                                 {messages.map((message) => (
                                     <div
                                         key={message.id}
-                                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+                                        className={`${message.role === 'user' ? 'text-right' : 'text-left'}`}
                                     >
                                         <div
-                                            className={`max-w-3/4 rounded-lg px-4 py-2 ${message.role === 'user'
-                                                ? 'bg-blue-500 text-white'
+                                            className={`inline-block p-3 rounded-lg max-w-[90%] ${message.role === 'user'
+                                                ? 'bg-gray-900 text-white'
                                                 : message.isError
-                                                    ? 'bg-red-100 text-red-800 border border-red-300'
-                                                    : 'bg-gray-100 text-gray-800'
-                                                }`}
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-gray-100 text-gray-800'}`}
                                         >
-                                            <div className="flex items-center mb-1">
-                                                {message.role === 'assistant' ? (
-                                                    <Bot size={16} className="mr-2" />
-                                                ) : (
-                                                    <User size={16} className="mr-2" />
-                                                )}
-                                                <span className="font-semibold">
-                                                    {message.role === 'assistant' ? 'SOP Assistant' : 'You'}
-                                                </span>
-                                                <span className="text-xs opacity-75 ml-2">
-                                                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                            </div>
-                                            <div className="whitespace-pre-wrap">{message.content}</div>
+                                            {message.content}
                                         </div>
                                     </div>
                                 ))}
-                                {isLoading && (
-                                    <div className="flex justify-start">
-                                        <div className="max-w-[80%] rounded-lg p-3 bg-gray-100 text-gray-800 rounded-bl-none">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <Bot size={14} className="text-blue-600" />
-                                                <span className="text-xs font-medium">SOP Assistant</span>
-                                            </div>
-                                            <p className="text-sm">Thinking...</p>
-                                        </div>
-                                    </div>
-                                )}
-                                <div ref={messagesEndRef} />
                             </div>
                         </div>
 
-                        {/* Message Input */}
-                        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-                            <form onSubmit={handleSendMessage} className="relative">
+                        {/* Chat Input */}
+                        <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
+                            <form onSubmit={handleSendMessage} className="flex items-center">
                                 <input
                                     type="text"
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
-                                    placeholder="Message SOP Assistant..."
-                                    className="w-full pl-4 pr-12 py-3 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-gray-500 focus:border-transparent h-12"
+                                    className="flex-1 border border-gray-300 rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                    placeholder="Ask for help with your SOP..."
                                     disabled={isLoading}
                                 />
                                 <button
                                     type="submit"
-                                    disabled={!prompt.trim() || isLoading}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-gray-900 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-gray-900 text-white p-2 rounded-r-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50"
+                                    disabled={isLoading || !prompt.trim()}
                                 >
-                                    <Send size={18} className="text-gray-900" />
+                                    {isLoading ? (
+                                        <div className="w-5 h-5 border-2 border-white border-t-2 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <Send size={18} />
+                                    )}
                                 </button>
                             </form>
                         </div>
