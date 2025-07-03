@@ -142,7 +142,11 @@ const SOPWriter = () => {
                     </div>
 
                     {/* Right Side - Voice Chat */}
-                    <div className="w-96 border-l border-gray-200">
+                    <div className="w-96 flex flex-col border-l border-gray-200" style={{
+                        height: 'calc(100vh - 5rem)', // Adjust this value based on your header height
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
                         <VoiceChatBot
                             onMessage={handleBotMessage}
                             initialMessages={initialMessages}

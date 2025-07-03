@@ -257,7 +257,12 @@ const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
     return (
         <div className="flex flex-col h-full">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{
+                maxHeight: 'calc(100vh - 200px)',
+                minHeight: '200px',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch'
+            }}>
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -293,43 +298,51 @@ const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
                 <div ref={chatEndRef} />
             </div>
 
-            {/* Input Area */}
+            {/* Input area - fixed at bottom */}
             <div className="border-t border-gray-200 p-4 bg-white">
-                <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                <form onSubmit={handleSubmit} className="flex space-x-2">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Type your message..."
+                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={isLoading}
                     />
                     <button
                         type="button"
                         onClick={toggleListening}
-                        className={`p-2 rounded-full ${isListening ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'
-                            }`}
-                        title={isListening ? 'Stop listening' : 'Start voice input'}
+                        className={`p-2 rounded-full ${isListening ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        disabled={isLoading}
                     >
                         {isListening ? <MicOff size={20} /> : <Mic size={20} />}
                     </button>
                     <button
-                        type="button"
-                        onClick={toggleSpeaking}
-                        className={`p-2 rounded-full ${isSpeaking ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-                            }`}
-                        title={isSpeaking ? 'Stop speaking' : 'Enable text-to-speech'}
-                    >
-                        {isSpeaking ? <Volume2 size={20} /> : <VolumeX size={20} />}
-                    </button>
-                    <button
                         type="submit"
-                        className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        disabled={isLoading || !input.trim()}
+                        disabled={!input.trim() || isLoading}
+                        className="bg-blue-600 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Send size={20} />
                     </button>
                 </form>
+                <div className="flex justify-end mt-2">
+                    <button
+                        onClick={() => setIsSpeaking(!isSpeaking)}
+                        className="text-sm text-gray-500 hover:text-gray-700 flex items-center"
+                    >
+                        {isSpeaking ? (
+                            <>
+                                <VolumeX size={16} className="mr-1" />
+                                Mute
+                            </>
+                        ) : (
+                            <>
+                                <Volume2 size={16} className="mr-1" />
+                                Unmute
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );
