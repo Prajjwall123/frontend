@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Save, ExternalLink } from 'lucide-react';
+import { Save, ExternalLink, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -67,95 +67,125 @@ const SOPWriter = () => {
     }];
 
     return (
-        <div className="flex flex-col min-h-screen bg-white">
+        <div className="min-h-screen bg-gray-100 flex flex-col">
             <Navbar />
 
-            <div className="flex-1 flex flex-col" style={{ marginTop: '5rem', minHeight: 'calc(100vh - 10rem)' }}>
-                {/* Header */}
-                <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-lg font-semibold text-gray-900">{courseName}</h1>
-                        <p className="text-sm text-gray-600">{universityName}</p>
-                    </div>
-                    <button
-                        onClick={handleViewCourse}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-900 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                    >
-                        <ExternalLink className="w-4 h-4 mr-2 text-gray-900" />
-                        View Course
-                    </button>
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 flex overflow-hidden">
-                    {/* Left Side - Editor */}
-                    <div className="flex-1 flex flex-col border-r border-gray-200 overflow-hidden">
-                        {/* Toolbar */}
-                        <div className="border-b border-gray-200 bg-gray-50 p-2 flex items-center justify-between">
-                            <div className="text-sm text-gray-500">
-                                {wordCount} words • {characterCount} characters
-                            </div>
-                        </div>
-
-                        {/* Editor */}
-                        <div className="flex-1 overflow-auto">
-                            <div className={`essay-container ${isUpdatingEssay ? 'updating' : ''}`}>
-                                {isUpdatingEssay ? (
-                                    <div className="p-4">
-                                        <Typewriter
-                                            text={content}
-                                            speed={1}
-                                            onComplete={handleTypewriterComplete}
-                                            className="whitespace-pre-wrap"
-                                        />
+            {/* Add padding top to account for fixed navbar */}
+            <div className="pt-20 flex-1">
+                {/* Main Layout */}
+                <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+                    {/* Course Header */}
+                    <div className="bg-gray-900 text-white shadow-lg rounded-lg overflow-hidden border border-gray-800">
+                        <div className="px-6 py-5 sm:px-8">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex-shrink-0 bg-gray-800 p-3 rounded-lg">
+                                        <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                                            <span className="text-2xl font-bold text-white">SU</span>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <textarea
-                                        ref={textareaRef}
-                                        className="essay-editor"
-                                        value={content}
-                                        onChange={(e) => setContent(e.target.value)}
-                                        placeholder="Start writing your Statement of Purpose here..."
-                                        style={{
-                                            minHeight: 'calc(100vh - 20rem)',
-                                            height: 'auto',
-                                            resize: 'none',
-                                            overflow: 'auto'
-                                        }}
-                                    />
-                                )}
+                                    <div>
+                                        <h1 className="text-2xl font-bold text-white">{courseName}</h1>
+                                        <p className="text-gray-300 mt-1">{universityName}</p>
+                                    </div>
+                                </div>
+                                <div className="flex-shrink-0">
+                                    <button
+                                        onClick={handleViewCourse}
+                                        className="inline-flex items-center px-5 py-2.5 border border-gray-600 text-sm font-medium rounded-lg text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                                    >
+                                        <ExternalLink className="w-4 h-4 mr-2" />
+                                        View Course
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Footer */}
-                        <div className="border-t border-gray-200 bg-gray-50 px-4 py-3">
-                            <div className="flex justify-center">
+                    {/* Editor and Chat Layout */}
+                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
+                        {/* Editor Section */}
+                        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
+                            {/* Editor Header */}
+                            <div className="bg-gray-50 px-6 py-3.5 border-b border-gray-200 flex justify-between items-center">
+                                <div className="text-sm font-medium text-gray-700">
+                                    {wordCount} words • {characterCount} characters
+                                </div>
                                 <button
-                                    onClick={handleSubmit}
-                                    className="w-full max-w-xs flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                                    onClick={handleViewCourse}
+                                    className="lg:hidden inline-flex items-center px-3.5 py-1.5 border border-gray-300 text-xs rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                                 >
-                                    <Save className="w-4 h-4 mr-2 text-white" />
-                                    Submit SOP
+                                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                                    View Course
                                 </button>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Right Side - Voice Chat */}
-                    <div className="w-96 flex flex-col border-l border-gray-200" style={{
-                        height: 'calc(100vh - 5rem)', // Adjust this value based on your header height
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }}>
-                        <VoiceChatBot
-                            onMessage={handleBotMessage}
-                            initialMessages={initialMessages}
-                            currentSOP={content}
-                        />
+                            {/* Editor Content */}
+                            <div className="flex-1 overflow-auto">
+                                <div className={`essay-container ${isUpdatingEssay ? 'updating' : ''}`}>
+                                    {isUpdatingEssay ? (
+                                        <div className="p-6">
+                                            <Typewriter
+                                                text={content}
+                                                speed={1}
+                                                onComplete={handleTypewriterComplete}
+                                                className="whitespace-pre-wrap text-base leading-relaxed text-gray-800"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <textarea
+                                            ref={textareaRef}
+                                            className="essay-editor w-full p-6 text-base leading-relaxed text-gray-800 focus:outline-none resize-none bg-white"
+                                            value={content}
+                                            onChange={(e) => setContent(e.target.value)}
+                                            placeholder="Start writing your Statement of Purpose here..."
+                                            style={{
+                                                minHeight: '100%',
+                                                lineHeight: '1.75',
+                                                width: '100%'
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Editor Footer */}
+                            <div className="bg-gray-50 px-6 py-3.5 border-t border-gray-200">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={handleSubmit}
+                                        className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                                    >
+                                        <Save className="w-4 h-4 mr-2 text-white" />
+                                        Submit SOP
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Chat Section */}
+                        <div className="lg:col-span-1 flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden">
+                                <div className="bg-gray-900 px-5 py-3.5">
+                                    <h3 className="text-white font-semibold flex items-center">
+                                        <MessageSquare className="w-5 h-5 mr-2" />
+                                        SOP Assistant
+                                    </h3>
+                                </div>
+                                <div className="flex-1 overflow-auto">
+                                    <VoiceChatBot
+                                        onMessage={handleBotMessage}
+                                        initialMessages={initialMessages}
+                                        currentSOP={content}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Footer */}
             <Footer />
         </div>
     );
