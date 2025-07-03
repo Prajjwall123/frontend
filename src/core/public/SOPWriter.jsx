@@ -1,14 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Save, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import VoiceChatBot from '../../components/VoiceChatBot';
+import Typewriter from '../../components/Typewriter';
 import './SOPWriter.css';
 
 const SOPWriter = () => {
     const [content, setContent] = useState('');
     const [isUpdatingEssay, setIsUpdatingEssay] = useState(false);
+    const [displayedContent, setDisplayedContent] = useState('');
     const textareaRef = useRef(null);
     const navigate = useNavigate();
 
@@ -16,6 +18,24 @@ const SOPWriter = () => {
     const courseName = 'Computer Science';
     const universityName = 'Stanford University';
     const courseId = 'cs101';
+
+    // Handle content updates with typewriter effect
+    useEffect(() => {
+        if (content && content !== displayedContent) {
+            setIsUpdatingEssay(true);
+        }
+    }, [content, displayedContent]);
+
+    const handleContentUpdate = (newContent) => {
+        if (newContent && newContent !== content) {
+            setContent(newContent);
+        }
+    };
+
+    const handleTypewriterComplete = () => {
+        setIsUpdatingEssay(false);
+        setDisplayedContent(content);
+    };
 
     const handleViewCourse = () => {
         navigate(`/course/${courseId}`);
@@ -25,6 +45,13 @@ const SOPWriter = () => {
         // Handle SOP submission
         console.log('SOP submitted:', content);
         alert('SOP submitted successfully!');
+    };
+
+    // Handle messages from the chatbot
+    const handleBotMessage = (message) => {
+        if (message.updatedEssay) {
+            handleContentUpdate(message.updatedEssay);
+        }
     };
 
     // Word and character count
@@ -38,29 +65,6 @@ const SOPWriter = () => {
         content: 'Hello! I\'m your SOP Assistant. I can help you write and improve your Statement of Purpose. How can I assist you today?',
         timestamp: new Date()
     }];
-
-    // Handle messages from the chatbot
-    const handleBotMessage = (message) => {
-        // If the bot suggests an update to the SOP, update the content
-        if (message.updatedEssay) {
-            setIsUpdatingEssay(true);
-            setContent(message.updatedEssay);
-            // Add a small delay to show the update animation
-            setTimeout(() => setIsUpdatingEssay(false), 1000);
-        } else if (message.role === 'assistant' && !message.isError) {
-            // For regular assistant messages, check if they contain essay updates
-            // This handles the case where the AI returns the updated essay in the message content
-            const essayMatch = message.content.match(/```(?:markdown)?\n([\s\S]*?)\n```/);
-            if (essayMatch && essayMatch[1]) {
-                const updatedContent = essayMatch[1].trim();
-                if (updatedContent !== content) {
-                    setIsUpdatingEssay(true);
-                    setContent(updatedContent);
-                    setTimeout(() => setIsUpdatingEssay(false), 1000);
-                }
-            }
-        }
-    };
 
     return (
         <div className="flex flex-col min-h-screen bg-white">
@@ -96,25 +100,30 @@ const SOPWriter = () => {
                         {/* Editor */}
                         <div className="flex-1 overflow-auto">
                             <div className={`essay-container ${isUpdatingEssay ? 'updating' : ''}`}>
-                                {isUpdatingEssay && (
-                                    <div className="update-overlay">
-                                        <div className="update-spinner"></div>
-                                        <span>Updating your essay...</span>
+                                {isUpdatingEssay ? (
+                                    <div className="p-4">
+                                        <Typewriter
+                                            text={content}
+                                            speed={1}
+                                            onComplete={handleTypewriterComplete}
+                                            className="whitespace-pre-wrap"
+                                        />
                                     </div>
+                                ) : (
+                                    <textarea
+                                        ref={textareaRef}
+                                        className="essay-editor"
+                                        value={content}
+                                        onChange={(e) => setContent(e.target.value)}
+                                        placeholder="Start writing your Statement of Purpose here..."
+                                        style={{
+                                            minHeight: 'calc(100vh - 20rem)',
+                                            height: 'auto',
+                                            resize: 'none',
+                                            overflow: 'auto'
+                                        }}
+                                    />
                                 )}
-                                <textarea
-                                    ref={textareaRef}
-                                    className="essay-editor"
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    placeholder="Start writing your Statement of Purpose here..."
-                                    style={{
-                                        minHeight: 'calc(100vh - 20rem)',
-                                        height: 'auto',
-                                        resize: 'none',
-                                        overflow: 'auto'
-                                    }}
-                                />
                             </div>
                         </div>
 

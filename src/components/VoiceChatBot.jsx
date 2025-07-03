@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import Typewriter from './Typewriter';
 
 const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
     const [messages, setMessages] = useState(initialMessages);
@@ -8,6 +9,7 @@ const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [completedMessages, setCompletedMessages] = useState(new Set());
     const recognitionRef = useRef(null);
     const synthRef = useRef(window.speechSynthesis);
     const chatEndRef = useRef(null);
@@ -213,8 +215,7 @@ const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
                 timestamp: new Date()
             };
 
-            setMessages(prev => [...prev, botMessage]);
-            if (onMessage) onMessage(botMessage);
+            handleBotMessage(botMessage);
             if (isSpeaking) speak(messageContent);
 
         } catch (error) {
@@ -235,6 +236,12 @@ const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleBotMessage = (message) => {
+        setMessages(prev => [...prev, message]);
+        setCompletedMessages(prev => new Set([...prev, message.id]));
+        if (onMessage) onMessage(message);
     };
 
     const handleSubmit = (e) => {
@@ -258,13 +265,28 @@ const VoiceChatBot = ({ onMessage, initialMessages = [], currentSOP = '' }) => {
                     >
                         <div
                             className={`max-w-[80%] p-3 rounded-lg ${message.role === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : message.isError
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-blue-600 text-white'
+                                    : message.isError
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-gray-100 text-gray-800'
                                 }`}
                         >
-                            {message.content}
+                            {message.role === 'assistant' && !message.isError ? (
+                                <Typewriter
+                                    text={message.content}
+                                    speed={10}
+                                    onComplete={() => {
+                                        if (!completedMessages.has(message.id)) {
+                                            setCompletedMessages(prev => new Set([...prev, message.id]));
+                                            if (isSpeaking) {
+                                                speak(message.content);
+                                            }
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                message.content
+                            )}
                         </div>
                     </div>
                 ))}
