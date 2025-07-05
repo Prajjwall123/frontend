@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCourses } from "../../utils/coursesHelper";
 import Navbar from "../../components/Navbar";
-import SearchBar from "../../components/SearchBar";
 import Sidebar from "../../components/Sidebar";
 import UniversityCard from "../../components/UniversityCard";
-import { SlidersHorizontal, LayoutGrid, List, ChevronDown, Filter } from "lucide-react";
+import { SlidersHorizontal, LayoutGrid, List, ChevronDown, Filter, Search } from "lucide-react";
 import Footer from "../../components/Footer";
 
 // Helper function to extract unique values from university data
@@ -16,13 +15,20 @@ const extractUniqueValues = (data, key) => {
 
 // Helper function to extract countries from location strings
 const extractCountries = (data) => {
-  const countries = data.map(item => item.university?.country || '');
+  const countries = data.map(item => {
+    const location = item.location || '';
+    // Extract country after the last comma and trim any whitespace
+    const country = location.split(',').pop().trim();
+    return country || 'Unknown';
+  });
   return ['All Countries', ...new Set(countries)].filter(Boolean);
 };
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('');
 
   // Fetch courses using React Query
   const { data: courses = [], isLoading } = useQuery({
@@ -32,29 +38,38 @@ const Dashboard = () => {
 
   // Transform course data to match the existing card structure
   const sampleCards = React.useMemo(() => {
-    return courses.map(course => ({
-      id: course._id,  // Make sure this is the course ID, not university ID
-      courseId: course._id,  // Explicitly pass course ID
-      logo: course.university?.photo ? `http://localhost:3000${course.university.photo}` : null,
-      university: course.university?.name || 'University',
-      level: course.course_level ?
-        course.course_level.charAt(0).toUpperCase() + course.course_level.slice(1) :
-        'Program',
-      program: course.course_name || 'Course',
-      location: course.university?.location || 'Location not specified',
-      tuition: course.course_tuition ? `$${course.course_tuition.toLocaleString()}` : 'Contact for pricing',
-      applicationFee: course.application_fee ? `$${course.application_fee}` : 'No fee',
-      duration: course.course_duration || 'Duration not specified',
-      country: course.university?.country || ''
-    }));
+    return courses.map(course => {
+      const location = course.university?.location || 'Location not specified';
+      const [city, country] = location.split(',').map(s => s.trim());
+
+      return {
+        id: course._id,
+        courseId: course._id,
+        logo: course.university?.photo ? `http://localhost:3000${course.university.photo}` : null,
+        university: course.university?.name || 'University',
+        level: course.course_level ?
+          course.course_level.charAt(0).toUpperCase() + course.course_level.slice(1) :
+          'Program',
+        program: course.course_name || 'Course',
+        location: location,
+        city: city || 'Unknown',
+        country: country || 'Unknown',
+        tuition: course.course_tuition ? `$${course.course_tuition.toLocaleString()}` : 'Contact for pricing',
+        applicationFee: course.application_fee ? `$${course.application_fee}` : 'No fee',
+        duration: course.course_duration || 'Duration not specified'
+      };
+    });
   }, [courses]);
 
   // Filter state
   const [filters, setFilters] = useState({
-    country: 'All Countries',
-    level: 'All',
-    subject: 'All',
-    duration: 'All',
+    country: '',
+    level: '',
+    subject: '',
+    duration: '',
+    programLevels: [],
+    locations: [],
+    durations: []
   });
 
   // Extract filter options from real data
@@ -83,49 +98,98 @@ const Dashboard = () => {
     };
   }, [sampleCards]);
 
-  // Apply filters to university data
-  const filteredCards = React.useMemo(() => {
+  // Handle filter changes from both dropdowns and sidebar
+  const handleFilterChange = (filterName, value) => {
+    // Handle array-based filters (from Sidebar)
+    if (['programLevels', 'locations', 'durations'].includes(filterName)) {
+      setFilters(prev => ({
+        ...prev,
+        [filterName]: prev[filterName].includes(value)
+          ? prev[filterName].filter(item => item !== value)
+          : [...prev[filterName], value]
+      }));
+    } else {
+      // Handle single-value filters (from dropdowns)
+      setFilters(prev => ({
+        ...prev,
+        [filterName]: value === '' ? '' : value
+      }));
+    }
+  };
+
+  // Apply filters, search, and sorting to university data
+  const filteredAndSortedCards = React.useMemo(() => {
     if (!sampleCards?.length) return [];
 
-    return sampleCards.filter(card => {
-      // Safely access properties with optional chaining
+    // Apply filters and search
+    let result = sampleCards.filter(card => {
       const cardCountry = card.country || '';
       const cardLevel = card.level || '';
       const cardDuration = card.duration || '';
       const cardProgram = card.program?.toLowerCase() || '';
+      const cardUniversity = card.university?.toLowerCase() || '';
 
-      // Get filter values with defaults
-      const filterCountry = filters.country || 'All Countries';
-      const filterLevel = filters.level || 'All';
-      const filterDuration = filters.duration || 'All';
-      const filterSubject = (filters.subject || '').toLowerCase();
+      // Apply search term
+      const matchesSearch = !searchTerm ||
+        cardProgram.includes(searchTerm.toLowerCase()) ||
+        cardUniversity.includes(searchTerm.toLowerCase()) ||
+        cardCountry.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Apply filters
-      const matchesCountry = filterCountry === 'All Countries' || cardCountry === filterCountry;
-      const matchesLevel = filterLevel === 'All' || cardLevel === filterLevel;
-      const matchesDuration = filterDuration === 'All' || cardDuration === filterDuration;
-      const matchesSubject = filterSubject === 'all' || cardProgram.includes(filterSubject);
+      // Apply single-value filters
+      const matchesCountry = !filters.country || cardCountry === filters.country;
+      const matchesLevel = !filters.level || cardLevel === filters.level;
+      const matchesDuration = !filters.duration || cardDuration === filters.duration;
+      const matchesSubject = !filters.subject ||
+        cardProgram.includes(filters.subject.toLowerCase());
 
-      return matchesCountry && matchesLevel && matchesDuration && matchesSubject;
+      // Apply array-based filters (from Sidebar)
+      const matchesProgramLevel = filters.programLevels.length === 0 ||
+        filters.programLevels.includes(cardLevel);
+      const matchesLocation = filters.locations.length === 0 ||
+        filters.locations.includes(cardCountry);
+      const matchesDurationFilter = filters.durations.length === 0 ||
+        filters.durations.includes(cardDuration);
+
+      return (
+        matchesSearch &&
+        matchesCountry &&
+        matchesLevel &&
+        matchesDuration &&
+        matchesSubject &&
+        matchesProgramLevel &&
+        matchesLocation &&
+        matchesDurationFilter
+      );
     });
-  }, [sampleCards, filters]);
 
-  // Handle filter changes from SearchBar
-  const handleSearchFilterChange = (filterName, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterName]: value || 'All'  // Ensure we never set undefined or null
-    }));
-  };
+    // Apply sorting
+    if (sortBy === 'tuition-asc') {
+      result = [...result].sort((a, b) => {
+        const aTuition = parseFloat(a.tuition.replace(/[^0-9.]/g, '')) || 0;
+        const bTuition = parseFloat(b.tuition.replace(/[^0-9.]/g, '')) || 0;
+        return aTuition - bTuition;
+      });
+    } else if (sortBy === 'tuition-desc') {
+      result = [...result].sort((a, b) => {
+        const aTuition = parseFloat(a.tuition.replace(/[^0-9.]/g, '')) || 0;
+        const bTuition = parseFloat(b.tuition.replace(/[^0-9.]/g, '')) || 0;
+        return bTuition - aTuition;
+      });
+    } else if (sortBy === 'duration-asc') {
+      result = [...result].sort((a, b) => {
+        // Extract numbers from duration strings (e.g., "2 years" -> 2)
+        const aDuration = parseFloat(a.duration) || 0;
+        const bDuration = parseFloat(b.duration) || 0;
+        return aDuration - bDuration;
+      });
+    }
 
-  // Handle filter changes from Sidebar
-  const handleSidebarFilterChange = (filterType, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterType]: prev[filterType].includes(value)
-        ? prev[filterType].filter(item => item !== value)
-        : [...prev[filterType], value]
-    }));
+    return result;
+  }, [sampleCards, filters, searchTerm, sortBy]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // The search is handled in the filteredAndSortedCards computation
   };
 
   if (isLoading) {
@@ -171,21 +235,97 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-            <SearchBar
-              filters={{
-                country: filters.country,
-                level: filters.level,
-                subject: filters.subject,
-                duration: filters.duration
-              }}
-              filterOptions={{
-                countries: filterOptions.countries,
-                levels: filterOptions.levels,
-                subjects: filterOptions.subjects,
-                durations: filterOptions.durations
-              }}
-              onFilterChange={handleSearchFilterChange}
-            />
+
+            {/* Search Input */}
+            <form onSubmit={handleSearch} className="mb-6">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search for programs, universities, or countries"
+                  className="block w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400 text-base"
+                />
+              </div>
+            </form>
+
+            {/* Filter Dropdowns */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Country Dropdown */}
+              <div>
+                <select
+                  value={filters.country}
+                  onChange={(e) => handleFilterChange('country', e.target.value)}
+                  className="w-full pl-3 pr-10 py-2.5 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700"
+                >
+                  <option value="">All Countries</option>
+                  {filterOptions.countries
+                    ?.filter(country => country && country !== 'All Countries')
+                    ?.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Level Dropdown */}
+              <div>
+                <select
+                  value={filters.level}
+                  onChange={(e) => handleFilterChange('level', e.target.value)}
+                  className="w-full pl-3 pr-10 py-2.5 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700"
+                >
+                  <option value="">All Levels</option>
+                  {filterOptions.levels
+                    ?.filter(level => level && level !== 'All')
+                    ?.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Subject Dropdown */}
+              <div>
+                <select
+                  value={filters.subject}
+                  onChange={(e) => handleFilterChange('subject', e.target.value)}
+                  className="w-full pl-3 pr-10 py-2.5 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700"
+                >
+                  <option value="">All Subjects</option>
+                  {filterOptions.subjects
+                    ?.filter(subject => subject && subject !== 'All')
+                    ?.map((subject) => (
+                      <option key={subject} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Duration Dropdown */}
+              <div>
+                <select
+                  value={filters.duration}
+                  onChange={(e) => handleFilterChange('duration', e.target.value)}
+                  className="w-full pl-3 pr-10 py-2.5 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700"
+                >
+                  <option value="">All Durations</option>
+                  {filterOptions.durations
+                    ?.filter(duration => duration && duration !== 'All')
+                    ?.map((duration) => (
+                      <option key={duration} value={duration}>
+                        {duration}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -212,7 +352,7 @@ const Dashboard = () => {
                 locations: filterOptions.countries.filter(c => c !== 'All Countries'),
                 durations: filterOptions.durations.filter(d => d !== 'All')
               }}
-              onFilterChange={handleSearchFilterChange}
+              onFilterChange={handleFilterChange}
             />
           </div>
 
@@ -221,16 +361,20 @@ const Dashboard = () => {
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 bg-white p-4 rounded-xl border border-gray-100">
               <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-                Showing <span className="font-medium text-gray-900">{filteredCards.length}</span> of <span className="font-medium text-gray-900">{sampleCards.length}</span> results
+                Showing <span className="font-medium text-gray-900">{filteredAndSortedCards.length}</span> of <span className="font-medium text-gray-900">{sampleCards.length}</span> results
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">Sort by:</span>
                 <div className="relative">
-                  <select className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#05213b]/20 focus:border-[#05213b] cursor-pointer">
-                    <option>Most Relevant</option>
-                    <option>Tuition (Low to High)</option>
-                    <option>Tuition (High to Low)</option>
-                    <option>Duration (Shortest First)</option>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#05213b]/20 focus:border-[#05213b] cursor-pointer"
+                  >
+                    <option value="">Select sort option</option>
+                    <option value="tuition-asc">Tuition (Low to High)</option>
+                    <option value="tuition-desc">Tuition (High to Low)</option>
+                    <option value="duration-asc">Duration (Shortest First)</option>
                   </select>
                   <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
@@ -239,8 +383,8 @@ const Dashboard = () => {
 
             {/* University Cards Grid */}
             <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' : 'space-y-4'} gap-6`}>
-              {filteredCards.length > 0 ? (
-                filteredCards.map((card) => (
+              {filteredAndSortedCards.length > 0 ? (
+                filteredAndSortedCards.map((card) => (
                   <UniversityCard
                     key={card.id}
                     id={card.courseId}  // Pass course ID for redirection
@@ -250,6 +394,8 @@ const Dashboard = () => {
                     level={card.level}
                     program={card.program}
                     location={card.location}
+                    city={card.city}
+                    country={card.country}
                     tuition={card.tuition}
                     applicationFee={card.applicationFee}
                     duration={card.duration}
