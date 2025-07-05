@@ -27,6 +27,7 @@ const ProfileStepper = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const location = useLocation();
+    const navigate = useNavigate();
     const hasShownWelcome = useRef(false);
     const [formData, setFormData] = useState({
         // Personal Info
@@ -167,9 +168,12 @@ const ProfileStepper = () => {
             if (activeStep < steps.length - 1) {
                 setActiveStep(prev => prev + 1);
             } else {
-                // If it's the last step, show success message
+                // If it's the last step, show success message and redirect to dashboard
                 toast.success('Profile updated successfully!');
                 console.log('Profile update complete');
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 1500); // Redirect after 1.5 seconds to show the success message
             }
         }
     };
@@ -186,8 +190,11 @@ const ProfileStepper = () => {
         const success = await saveFormData(formData);
         if (success) {
             toast.success('Profile updated successfully!');
-            // Navigate to dashboard or show success message
             console.log('Profile update complete');
+            // Redirect to dashboard after a short delay to show the success message
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 1500);
         }
     };
 

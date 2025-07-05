@@ -1,18 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Clock, CreditCard } from 'lucide-react';
 import { getCourseById } from '../../utils/coursesHelper';
 import { getScholarshipsByUniversityId } from '../../utils/scholarshipHelper';
+import { isAuthenticated } from '../../utils/authHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import { toast } from 'react-toastify';
 
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [course, setCourse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [scholarships, setScholarships] = useState([]);
   const [isLoadingScholarships, setIsLoadingScholarships] = useState(false);
+
+  // Function to handle authentication check and redirect
+  const handleAuthRequired = (e, action) => {
+    e?.preventDefault();
+    if (!isAuthenticated()) {
+      // Store the current path to redirect back after login
+      const redirectPath = `/login?redirect=${encodeURIComponent(location.pathname)}`;
+      toast.info('Please login to continue');
+      navigate(redirectPath);
+      return false;
+    }
+    return true;
+  };
+
+  // Handle scholarship details click
+  const handleViewDetails = (e, scholarshipName) => {
+    if (handleAuthRequired(e)) {
+      console.log('View details for:', scholarshipName);
+      // Add your scholarship details logic here
+    }
+  };
+
+  // Handle apply now click
+  const handleApplyNow = (e) => {
+    if (handleAuthRequired(e)) {
+      console.log('Apply now clicked');
+      // Add your apply now logic here
+    }
+  };
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -130,7 +162,10 @@ const CourseDetail = () => {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors">
+                <button
+                  onClick={handleApplyNow}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors"
+                >
                   Apply Now
                 </button>
               </div>
@@ -226,10 +261,7 @@ const CourseDetail = () => {
                           </div>
                           <button
                             className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium text-left flex items-center"
-                            onClick={() => {
-                              // You can add a modal or navigation here later
-                              console.log('View details for:', scholarship.scholarship_name);
-                            }}
+                            onClick={(e) => handleViewDetails(e, scholarship.scholarship_name)}
                           >
                             View Details
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">

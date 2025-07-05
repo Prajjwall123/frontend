@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { loginUser } from "../../utils/authHelper";
 import logo from "../../assets/logo.png";
@@ -9,9 +9,23 @@ import { motion } from "framer-motion";
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    // Get redirect path from URL query parameters and check if coming from verify
+    const searchParams = new URLSearchParams(location.search);
+    const redirectPath = searchParams.get('redirect');
+    const fromVerify = location.state?.fromVerify;
+    const verifyEmail = location.state?.email || '';
+
+    // Pre-fill email if coming from verify
+    useEffect(() => {
+        if (verifyEmail) {
+            setForm(prev => ({ ...prev, email: verifyEmail }));
+        }
+    }, [verifyEmail]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -25,11 +39,16 @@ const Login = () => {
             const { isNewUser } = await loginUser({ email: form.email, password: form.password });
             toast.success("Login successful!");
 
-            // Redirect based on user type
-            if (isNewUser) {
-                navigate("/profile", { state: { fromLogin: true } });  // New users go to profile with fromLogin state
+            // Redirect based on the following priority:
+            // 1. Redirect path from URL (if any)
+            // 2. To profile if coming from verify or if it's a new user
+            // 3. To home page as fallback
+            if (redirectPath) {
+                navigate(redirectPath);
+            } else if (fromVerify || isNewUser) {
+                navigate("/profile", { state: { fromLogin: true } });
             } else {
-                navigate("/");  // Returning users go to home
+                navigate("/");
             }
         } catch (err) {
             toast.error(err?.response?.data?.message || "Login failed. Please try again.");

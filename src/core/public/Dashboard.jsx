@@ -6,18 +6,16 @@ import Sidebar from "../../components/Sidebar";
 import UniversityCard from "../../components/UniversityCard";
 import { SlidersHorizontal, LayoutGrid, List, ChevronDown, Filter, Search } from "lucide-react";
 import Footer from "../../components/Footer";
+import { motion } from "framer-motion";
 
-// Helper function to extract unique values from university data
 const extractUniqueValues = (data, key) => {
   const values = data.map(item => item[key] || '');
   return ['All', ...new Set(values)].filter(Boolean);
 };
 
-// Helper function to extract countries from location strings
 const extractCountries = (data) => {
   const countries = data.map(item => {
     const location = item.location || '';
-    // Extract country after the last comma and trim any whitespace
     const country = location.split(',').pop().trim();
     return country || 'Unknown';
   });
@@ -29,14 +27,18 @@ const Dashboard = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Fetch courses using React Query
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses'],
     queryFn: getCourses,
   });
 
-  // Transform course data to match the existing card structure
   const sampleCards = React.useMemo(() => {
     return courses.map(course => {
       const location = course.university?.location || 'Location not specified';
@@ -61,7 +63,6 @@ const Dashboard = () => {
     });
   }, [courses]);
 
-  // Filter state
   const [filters, setFilters] = useState({
     country: '',
     level: '',
@@ -72,7 +73,6 @@ const Dashboard = () => {
     durations: []
   });
 
-  // Extract filter options from real data
   const filterOptions = React.useMemo(() => {
     const options = {
       countries: extractCountries(sampleCards),
@@ -80,7 +80,6 @@ const Dashboard = () => {
       durations: extractUniqueValues(sampleCards, 'duration')
     };
 
-    // Extract subjects from program names
     const subjects = new Set();
     sampleCards.forEach(card => {
       if (card.program) {
@@ -94,13 +93,11 @@ const Dashboard = () => {
 
     return {
       ...options,
-      subjects: ['All', ...Array.from(subjects)].slice(0, 11) // Limit to 10 subjects + 'All'
+      subjects: ['All', ...Array.from(subjects)].slice(0, 11)
     };
   }, [sampleCards]);
 
-  // Handle filter changes from both dropdowns and sidebar
   const handleFilterChange = (filterName, value) => {
-    // Handle array-based filters (from Sidebar)
     if (['programLevels', 'locations', 'durations'].includes(filterName)) {
       setFilters(prev => ({
         ...prev,
@@ -109,7 +106,6 @@ const Dashboard = () => {
           : [...prev[filterName], value]
       }));
     } else {
-      // Handle single-value filters (from dropdowns)
       setFilters(prev => ({
         ...prev,
         [filterName]: value === '' ? '' : value
@@ -117,11 +113,9 @@ const Dashboard = () => {
     }
   };
 
-  // Apply filters, search, and sorting to university data
   const filteredAndSortedCards = React.useMemo(() => {
     if (!sampleCards?.length) return [];
 
-    // Apply filters and search
     let result = sampleCards.filter(card => {
       const cardCountry = card.country || '';
       const cardLevel = card.level || '';
@@ -129,20 +123,17 @@ const Dashboard = () => {
       const cardProgram = card.program?.toLowerCase() || '';
       const cardUniversity = card.university?.toLowerCase() || '';
 
-      // Apply search term
       const matchesSearch = !searchTerm ||
         cardProgram.includes(searchTerm.toLowerCase()) ||
         cardUniversity.includes(searchTerm.toLowerCase()) ||
         cardCountry.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Apply single-value filters
       const matchesCountry = !filters.country || cardCountry === filters.country;
       const matchesLevel = !filters.level || cardLevel === filters.level;
       const matchesDuration = !filters.duration || cardDuration === filters.duration;
       const matchesSubject = !filters.subject ||
         cardProgram.includes(filters.subject.toLowerCase());
 
-      // Apply array-based filters (from Sidebar)
       const matchesProgramLevel = filters.programLevels.length === 0 ||
         filters.programLevels.includes(cardLevel);
       const matchesLocation = filters.locations.length === 0 ||
@@ -162,7 +153,6 @@ const Dashboard = () => {
       );
     });
 
-    // Apply sorting
     if (sortBy === 'tuition-asc') {
       result = [...result].sort((a, b) => {
         const aTuition = parseFloat(a.tuition.replace(/[^0-9.]/g, '')) || 0;
@@ -177,7 +167,6 @@ const Dashboard = () => {
       });
     } else if (sortBy === 'duration-asc') {
       result = [...result].sort((a, b) => {
-        // Extract numbers from duration strings (e.g., "2 years" -> 2)
         const aDuration = parseFloat(a.duration) || 0;
         const bDuration = parseFloat(b.duration) || 0;
         return aDuration - bDuration;
@@ -189,7 +178,6 @@ const Dashboard = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // The search is handled in the filteredAndSortedCards computation
   };
 
   if (isLoading) {
@@ -208,9 +196,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="pt-16"></div>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header and Search */}
         <div className="mb-8">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -236,7 +222,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Search Input */}
             <form onSubmit={handleSearch} className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -252,9 +237,7 @@ const Dashboard = () => {
               </div>
             </form>
 
-            {/* Filter Dropdowns */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Country Dropdown */}
               <div>
                 <select
                   value={filters.country}
@@ -272,7 +255,6 @@ const Dashboard = () => {
                 </select>
               </div>
 
-              {/* Level Dropdown */}
               <div>
                 <select
                   value={filters.level}
@@ -290,7 +272,6 @@ const Dashboard = () => {
                 </select>
               </div>
 
-              {/* Subject Dropdown */}
               <div>
                 <select
                   value={filters.subject}
@@ -308,7 +289,6 @@ const Dashboard = () => {
                 </select>
               </div>
 
-              {/* Duration Dropdown */}
               <div>
                 <select
                   value={filters.duration}
@@ -330,7 +310,6 @@ const Dashboard = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Mobile Filters Button */}
           <button
             onClick={() => setShowMobileFilters(!showMobileFilters)}
             className="lg:hidden flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -339,7 +318,6 @@ const Dashboard = () => {
             {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
 
-          {/* Sidebar - Hidden on mobile when filters are closed */}
           <div className={`${showMobileFilters ? 'block' : 'hidden'} lg:block lg:w-1/4`}>
             <Sidebar
               filters={{
@@ -356,9 +334,7 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Main Content */}
           <div className="flex-1">
-            {/* Results Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 bg-white p-4 rounded-xl border border-gray-100">
               <div className="text-sm text-gray-600 mb-2 sm:mb-0">
                 Showing <span className="font-medium text-gray-900">{filteredAndSortedCards.length}</span> of <span className="font-medium text-gray-900">{sampleCards.length}</span> results
@@ -381,26 +357,35 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* University Cards Grid */}
             <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' : 'space-y-4'} gap-6`}>
               {filteredAndSortedCards.length > 0 ? (
-                filteredAndSortedCards.map((card) => (
-                  <UniversityCard
+                filteredAndSortedCards.map((card, index) => (
+                  <motion.div
                     key={card.id}
-                    id={card.courseId}  // Pass course ID for redirection
-                    courseId={card.courseId}  // Also pass as courseId prop
-                    logo={card.logo}
-                    university={card.university}
-                    level={card.level}
-                    program={card.program}
-                    location={card.location}
-                    city={card.city}
-                    country={card.country}
-                    tuition={card.tuition}
-                    applicationFee={card.applicationFee}
-                    duration={card.duration}
-                    viewMode={viewMode}
-                  />
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.1,
+                      ease: "easeOut"
+                    }}
+                  >
+                    <UniversityCard
+                      id={card.courseId}
+                      courseId={card.courseId}
+                      logo={card.logo}
+                      university={card.university}
+                      level={card.level}
+                      program={card.program}
+                      location={card.location}
+                      city={card.city}
+                      country={card.country}
+                      tuition={card.tuition}
+                      applicationFee={card.applicationFee}
+                      duration={card.duration}
+                      viewMode={viewMode}
+                    />
+                  </motion.div>
                 ))
               ) : (
                 <div className="col-span-full text-center py-12">
@@ -410,7 +395,6 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Pagination */}
             <div className="mt-10 flex items-center justify-center gap-2">
               <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Previous
@@ -432,7 +416,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
