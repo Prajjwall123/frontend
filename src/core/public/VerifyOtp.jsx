@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { verifyOTP } from "../../utils/authHepler";
+import { verifyOTP } from "../../utils/authHelper";
 import logo from "../../assets/logo.png";
 
 const VerifyOtp = () => {
@@ -44,11 +44,16 @@ const VerifyOtp = () => {
         }
         setLoading(true);
         try {
-            await verifyOTP({ email, otp: otpCode }, navigate);
-            toast.success("OTP verified! You may now log in.");
-            navigate("/login");
+            await verifyOTP({ email, otp: otpCode });
+            toast.success("Account verified successfully! Please log in.");
+            navigate("/login", {
+                state: {
+                    email: email,
+                    fromVerify: true
+                }
+            });
         } catch (err) {
-            toast.error(err?.message || "OTP verification failed.");
+            toast.error(err?.response?.data?.message || "Failed to verify OTP. Please try again.");
         } finally {
             setLoading(false);
         }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { registerUser } from "../../utils/authHepler";
+import { registerUser } from "../../utils/authHelper";
 import logo from "../../assets/logo.png";
 import register from "../../assets/register.png";
 import { Eye, EyeOff } from "lucide-react";

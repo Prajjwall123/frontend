@@ -302,9 +302,16 @@ const CourseDetail = () => {
                     <p className="font-medium text-gray-900">{course.university?.name || 'N/A'}</p>
                     <p className="text-sm text-gray-600">{course.university?.location || 'N/A'}</p>
                     <button
-                      onClick={() => course.university?.id && navigate(`/university/${course.university.id}`)}
-                      className="text-blue-600 hover:underline text-sm mt-1 inline-flex items-center"
-                      disabled={!course.university?.id}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (course.university?._id) {
+                          window.open(`/university/${course.university._id}`, '_blank', 'noopener,noreferrer');
+                        } else {
+                          // toast.error('University information not available');
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800 hover:underline text-sm mt-1 inline-flex items-center transition-colors"
+                      aria-label={`View ${course.university?.name || 'university'} details`}
                     >
                       View university <ExternalLink size={14} className="ml-1" />
                     </button>

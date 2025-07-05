@@ -10,6 +10,7 @@ import EducationStep from './profile-steps/EducationStep';
 import VisaStep from './profile-steps/VisaStep';
 import EnglishTestStep from './profile-steps/EnglishTestStep';
 import { updateProfile, getProfile } from '../../utils/profileHelper';
+import { getUserInfo } from '../../utils/authHelper';
 
 // Import the profile side image
 import profileImage from '../../assets/profile-side-image.jpg';
@@ -24,6 +25,7 @@ const steps = [
 const ProfileStepper = () => {
     const [activeStep, setActiveStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState({
         // Personal Info
         gender: '',
@@ -63,11 +65,17 @@ const ProfileStepper = () => {
         },
     });
 
-    // Load profile data on component mount
+    // Fetch profile data on component mount
     useEffect(() => {
-        const loadProfile = async () => {
+        const fetchProfile = async () => {
             try {
-                const profile = await getProfile();
+                setIsLoading(true);
+                const user = getUserInfo();
+                if (!user?._id) {
+                    throw new Error('User not authenticated');
+                }
+
+                const profile = await getProfile(user._id);
                 if (profile) {
                     setFormData(prev => ({
                         ...prev,
@@ -80,12 +88,14 @@ const ProfileStepper = () => {
                     }));
                 }
             } catch (error) {
-                console.error('Error loading profile:', error);
+                console.error('Error fetching profile:', error);
                 toast.error('Failed to load profile data');
+            } finally {
+                setIsLoading(false);
             }
         };
 
-        loadProfile();
+        fetchProfile();
     }, []);
 
     // Save form data whenever it changes

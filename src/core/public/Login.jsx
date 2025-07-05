@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { loginUser } from "../../utils/authHepler";
+import { loginUser } from "../../utils/authHelper";
 import logo from "../../assets/logo.png";
 import login from "../../assets/login.jpg";
 import { Eye, EyeOff } from "lucide-react";
@@ -22,9 +22,15 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await loginUser({ email: form.email, password: form.password });
+            const { isNewUser } = await loginUser({ email: form.email, password: form.password });
             toast.success("Login successful!");
-            navigate("/");
+
+            // Redirect based on user type
+            if (isNewUser) {
+                navigate("/profile");  // New users go to profile
+            } else {
+                navigate("/");  // Returning users go to home
+            }
         } catch (err) {
             toast.error(err?.response?.data?.message || "Login failed. Please try again.");
         } finally {

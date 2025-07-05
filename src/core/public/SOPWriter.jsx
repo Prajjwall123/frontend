@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Save, ExternalLink, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
@@ -12,7 +12,9 @@ const SOPWriter = () => {
     const [isUpdatingEssay, setIsUpdatingEssay] = useState(false);
     const [displayedContent, setDisplayedContent] = useState('');
     const textareaRef = useRef(null);
+    const editorRef = useRef(null);
     const navigate = useNavigate();
+    const isInitialMount = useRef(true);
 
     // Course details (replace with dynamic data later)
     const courseName = 'Computer Science';
@@ -20,22 +22,29 @@ const SOPWriter = () => {
     const courseId = 'cs101';
 
     // Handle content updates with typewriter effect
-    useEffect(() => {
-        if (content && content !== displayedContent) {
-            setIsUpdatingEssay(true);
-        }
-    }, [content, displayedContent]);
+    const handleContentUpdate = useCallback((newContent) => {
+        if (!newContent || newContent === content) return;
 
-    const handleContentUpdate = (newContent) => {
-        if (newContent && newContent !== content) {
-            setContent(newContent);
-        }
-    };
+        // Store scroll position
+        const editor = editorRef.current;
+        const scrollTop = editor?.scrollTop || 0;
 
-    const handleTypewriterComplete = () => {
+        // Update content
+        setContent(newContent);
+        setIsUpdatingEssay(true);
+
+        // Restore scroll position after update
+        requestAnimationFrame(() => {
+            if (editor) {
+                editor.scrollTop = scrollTop;
+            }
+        });
+    }, [content]);
+
+    const handleTypewriterComplete = useCallback(() => {
         setIsUpdatingEssay(false);
         setDisplayedContent(content);
-    };
+    }, [content]);
 
     const handleViewCourse = () => {
         navigate(`/course/${courseId}`);
@@ -48,11 +57,11 @@ const SOPWriter = () => {
     };
 
     // Handle messages from the chatbot
-    const handleBotMessage = (message) => {
+    const handleBotMessage = useCallback((message) => {
         if (message.updatedEssay) {
             handleContentUpdate(message.updatedEssay);
         }
-    };
+    }, [handleContentUpdate]);
 
     // Word and character count
     const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
@@ -69,10 +78,7 @@ const SOPWriter = () => {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             <Navbar />
-
-            {/* Add padding top to account for fixed navbar */}
             <div className="pt-20 flex-1">
-                {/* Main Layout */}
                 <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
                     {/* Course Header */}
                     <div className="bg-gray-900 text-white shadow-lg rounded-lg overflow-hidden border border-gray-800">
@@ -105,7 +111,11 @@ const SOPWriter = () => {
                     {/* Editor and Chat Layout */}
                     <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
                         {/* Editor Section */}
-                        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
+                        <div
+                            ref={editorRef}
+                            className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 flex flex-col"
+                            style={{ height: 'calc(100vh - 280px)' }}
+                        >
                             {/* Editor Header */}
                             <div className="bg-gray-50 px-6 py-3.5 border-b border-gray-200 flex justify-between items-center">
                                 <div className="text-sm font-medium text-gray-700">
@@ -130,6 +140,8 @@ const SOPWriter = () => {
                                                 speed={1}
                                                 onComplete={handleTypewriterComplete}
                                                 className="whitespace-pre-wrap text-base leading-relaxed text-gray-800"
+                                                scrollContainer={editorRef.current}
+                                                preventScroll={true}
                                             />
                                         </div>
                                     ) : (
@@ -151,7 +163,7 @@ const SOPWriter = () => {
 
                             {/* Editor Footer */}
                             <div className="bg-gray-50 px-6 py-3.5 border-t border-gray-200">
-                                <div className="flex justify-end">
+                                <div className="flex justify-center">
                                     <button
                                         onClick={handleSubmit}
                                         className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
@@ -177,6 +189,7 @@ const SOPWriter = () => {
                                         onMessage={handleBotMessage}
                                         initialMessages={initialMessages}
                                         currentSOP={content}
+                                        disableAutoScroll={true}
                                     />
                                 </div>
                             </div>
@@ -184,8 +197,6 @@ const SOPWriter = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Footer */}
             <Footer />
         </div>
     );

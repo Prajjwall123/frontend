@@ -33,7 +33,8 @@ const Dashboard = () => {
   // Transform course data to match the existing card structure
   const sampleCards = React.useMemo(() => {
     return courses.map(course => ({
-      id: course._id,
+      id: course._id,  // Make sure this is the course ID, not university ID
+      courseId: course._id,  // Explicitly pass course ID
       logo: course.university?.photo ? `http://localhost:3000${course.university.photo}` : null,
       university: course.university?.name || 'University',
       level: course.course_level ?
@@ -54,33 +55,58 @@ const Dashboard = () => {
     level: 'All',
     subject: 'All',
     duration: 'All',
-    programLevels: [],
-    locations: [],
-    durations: []
   });
 
   // Extract filter options from real data
-  const filterOptions = React.useMemo(() => ({
-    countries: extractCountries(sampleCards),
-    levels: extractUniqueValues(sampleCards, 'level'),
-    subjects: extractUniqueValues(
-      sampleCards.flatMap(card =>
-        (card.program?.split(' ') || []).map(word => word.replace(/[^a-zA-Z]/g, ''))
-      )
-        .filter((value, index, self) => self.indexOf(value) === index && value.length > 3)
-        .slice(0, 10),
-      ''
-    ),
-    durations: extractUniqueValues(sampleCards, 'duration')
-  }), [sampleCards]);
+  const filterOptions = React.useMemo(() => {
+    const options = {
+      countries: extractCountries(sampleCards),
+      levels: extractUniqueValues(sampleCards, 'level'),
+      durations: extractUniqueValues(sampleCards, 'duration')
+    };
+
+    // Extract subjects from program names
+    const subjects = new Set();
+    sampleCards.forEach(card => {
+      if (card.program) {
+        const words = card.program
+          .split(/\s+/)
+          .map(word => word.replace(/[^a-zA-Z]/g, ''))
+          .filter(word => word.length > 3);
+        words.forEach(word => subjects.add(word));
+      }
+    });
+
+    return {
+      ...options,
+      subjects: ['All', ...Array.from(subjects)].slice(0, 11) // Limit to 10 subjects + 'All'
+    };
+  }, [sampleCards]);
 
   // Apply filters to university data
   const filteredCards = React.useMemo(() => {
+    if (!sampleCards?.length) return [];
+
     return sampleCards.filter(card => {
-      const matchesCountry = filters.country === 'All Countries' || card.country === filters.country;
-      const matchesLevel = filters.level === 'All' || card.level === filters.level;
-      // Add more filter conditions as needed
-      return matchesCountry && matchesLevel;
+      // Safely access properties with optional chaining
+      const cardCountry = card.country || '';
+      const cardLevel = card.level || '';
+      const cardDuration = card.duration || '';
+      const cardProgram = card.program?.toLowerCase() || '';
+
+      // Get filter values with defaults
+      const filterCountry = filters.country || 'All Countries';
+      const filterLevel = filters.level || 'All';
+      const filterDuration = filters.duration || 'All';
+      const filterSubject = (filters.subject || '').toLowerCase();
+
+      // Apply filters
+      const matchesCountry = filterCountry === 'All Countries' || cardCountry === filterCountry;
+      const matchesLevel = filterLevel === 'All' || cardLevel === filterLevel;
+      const matchesDuration = filterDuration === 'All' || cardDuration === filterDuration;
+      const matchesSubject = filterSubject === 'all' || cardProgram.includes(filterSubject);
+
+      return matchesCountry && matchesLevel && matchesDuration && matchesSubject;
     });
   }, [sampleCards, filters]);
 
@@ -88,7 +114,7 @@ const Dashboard = () => {
   const handleSearchFilterChange = (filterName, value) => {
     setFilters(prev => ({
       ...prev,
-      [filterName]: value
+      [filterName]: value || 'All'  // Ensure we never set undefined or null
     }));
   };
 
@@ -155,8 +181,8 @@ const Dashboard = () => {
               filterOptions={{
                 countries: filterOptions.countries,
                 levels: filterOptions.levels,
-                subjects: ['All', ...filterOptions.subjects],
-                durations: ['All', ...filterOptions.durations]
+                subjects: filterOptions.subjects,
+                durations: filterOptions.durations
               }}
               onFilterChange={handleSearchFilterChange}
             />
@@ -186,7 +212,7 @@ const Dashboard = () => {
                 locations: filterOptions.countries.filter(c => c !== 'All Countries'),
                 durations: filterOptions.durations.filter(d => d !== 'All')
               }}
-              onFilterChange={handleSidebarFilterChange}
+              onFilterChange={handleSearchFilterChange}
             />
           </div>
 
@@ -217,7 +243,16 @@ const Dashboard = () => {
                 filteredCards.map((card) => (
                   <UniversityCard
                     key={card.id}
-                    {...card}
+                    id={card.courseId}  // Pass course ID for redirection
+                    courseId={card.courseId}  // Also pass as courseId prop
+                    logo={card.logo}
+                    university={card.university}
+                    level={card.level}
+                    program={card.program}
+                    location={card.location}
+                    tuition={card.tuition}
+                    applicationFee={card.applicationFee}
+                    duration={card.duration}
                     viewMode={viewMode}
                   />
                 ))

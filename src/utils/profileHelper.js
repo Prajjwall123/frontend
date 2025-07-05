@@ -1,16 +1,20 @@
 import API from './api';
+import { getUserInfo } from './authHelper';
 
-
-export const updateProfile = async (profileData, userId = '685e758150ed23b5362de641') => {
+export const updateProfile = async (profileData) => {
     try {
-        const token = localStorage.getItem('token');
+        const { _id } = getUserInfo();
+        if (!_id) {
+            throw new Error('No user is currently logged in');
+        }
 
+        const token = localStorage.getItem('token');
         if (!token) {
             throw new Error('No authentication token found');
         }
 
         const response = await API.patch(
-            `profiles/${userId}`,
+            `profiles/${_id}`,
             profileData,
             {
                 headers: {
@@ -27,17 +31,20 @@ export const updateProfile = async (profileData, userId = '685e758150ed23b5362de
     }
 };
 
-
-export const getProfile = async (userId = '685e758150ed23b5362de641') => {
+export const getProfile = async () => {
     try {
-        const token = localStorage.getItem('token');
+        const { _id } = getUserInfo();
+        if (!_id) {
+            throw new Error('No user is currently logged in');
+        }
 
+        const token = localStorage.getItem('token');
         if (!token) {
             throw new Error('No authentication token found');
         }
 
         const response = await API.get(
-            `profiles/${userId}`,
+            `profiles/${_id}`,
             {
                 headers: {
                     'Authorization': `Bearer ${token}`
