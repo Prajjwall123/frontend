@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Save, ExternalLink, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import VoiceChatBot from '../../components/VoiceChatBot';
@@ -11,15 +11,34 @@ const SOPWriter = () => {
     const [content, setContent] = useState('');
     const [isUpdatingEssay, setIsUpdatingEssay] = useState(false);
     const [displayedContent, setDisplayedContent] = useState('');
+    const [courseData, setCourseData] = useState({
+        courseName: 'Computer Science',
+        universityName: 'Stanford University',
+        courseId: 'cs101',
+        university_photo: null
+    });
     const textareaRef = useRef(null);
     const editorRef = useRef(null);
     const navigate = useNavigate();
+    const location = useLocation();
     const isInitialMount = useRef(true);
 
-    // Course details (replace with dynamic data later)
-    const courseName = 'Computer Science';
-    const universityName = 'Stanford University';
-    const courseId = 'cs101';
+    // Initialize with data from route state
+    useEffect(() => {
+        if (location.state?.course && location.state?.university) {
+            console.log('University data:', location.state.university);
+            setCourseData({
+                courseName: location.state.course.course_name || 'Computer Science',
+                universityName: location.state.university.university_name || 'Stanford University',
+                courseId: location.state.course._id || 'cs101',
+                university_photo: location.state.university.university_photo || null
+            });
+            if (location.state.currentSOP) {
+                setContent(location.state.currentSOP);
+                setDisplayedContent(location.state.currentSOP);
+            }
+        }
+    }, [location.state]);
 
     // Handle content updates with typewriter effect
     const handleContentUpdate = useCallback((newContent) => {
@@ -47,7 +66,7 @@ const SOPWriter = () => {
     }, [content]);
 
     const handleViewCourse = () => {
-        navigate(`/course/${courseId}`);
+        navigate(`/course/${courseData.courseId}`);
     };
 
     const handleSubmit = () => {
@@ -86,13 +105,23 @@ const SOPWriter = () => {
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div className="flex items-center space-x-4">
                                     <div className="flex-shrink-0 bg-gray-800 p-3 rounded-lg">
-                                        <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
-                                            <span className="text-2xl font-bold text-white">SU</span>
-                                        </div>
+                                        {courseData.university_photo ? (
+                                            <img
+                                                src={`http://localhost:3000/api/images/${courseData.university_photo}`}
+                                                alt={`${courseData.universityName} logo`}
+                                                className="w-12 h-12 object-contain rounded-lg"
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                                                <span className="text-2xl font-bold text-white">
+                                                    {courseData.universityName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-white">{courseName}</h1>
-                                        <p className="text-gray-300 mt-1">{universityName}</p>
+                                        <h1 className="text-2xl font-bold text-white">{courseData.courseName}</h1>
+                                        <p className="text-gray-300 mt-1">{courseData.universityName}</p>
                                     </div>
                                 </div>
                                 <div className="flex-shrink-0">

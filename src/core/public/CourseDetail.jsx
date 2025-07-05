@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Cloc
 import { getCourseById } from '../../utils/coursesHelper';
 import { getScholarshipsByUniversityId } from '../../utils/scholarshipHelper';
 import { isAuthenticated } from '../../utils/authHelper';
+import { createApplication } from '../../utils/applicationHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { toast } from 'react-toastify';
@@ -239,16 +240,36 @@ const CourseDetail = () => {
   };
 
   // Handle application submission
-  const handleApplicationSubmit = (applicationData) => {
-    console.log('Application submitted:', applicationData);
-    toast.success('Application created successfully!', {
-      position: 'top-right',
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
+  const handleApplicationSubmit = async (applicationData) => {
+    try {
+      const result = await createApplication(course._id, applicationData.intake);
+      console.log('Application created:', result);
+
+      toast.success('Application created successfully!', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Close the modal after successful submission
+      setShowApplicationModal(false);
+
+      // Optionally, you can redirect or update the UI here
+      // navigate('/applications');
+    } catch (error) {
+      console.error('Error creating application:', error);
+
+      toast.error(error.response?.data?.message || 'Failed to create application. Please try again.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+    }
   };
 
   useEffect(() => {

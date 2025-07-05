@@ -18,6 +18,7 @@ const UniversityDetailDynamic = lazy(() => import("./core/public/UniversityDetai
 const ProfileStepper = lazy(() => import("./core/private/ProfileStepper"));
 const SOPWriter = lazy(() => import("./core/public/SOPWriter"));
 const VisaInterview = lazy(() => import("./core/public/VisaInterview"));
+const Applications = lazy(() => import("./core/private/Applications"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -36,6 +37,7 @@ function App() {
     { path: "/profile", element: <Suspense fallback={<div>Loading...</div>}><ProfileStepper /></Suspense> },
     { path: "/sop-writer", element: <Suspense fallback={<div>Loading...</div>}><SOPWriter /></Suspense> },
     { path: "/visa-interview", element: <Suspense fallback={<div>Loading...</div>}><VisaInterview /></Suspense> },
+    { path: "/my-applications", element: <Suspense fallback={<div>Loading...</div>}><Applications /></Suspense> },
   ];
 
   return (

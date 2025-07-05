@@ -60,7 +60,7 @@ const Navbar = () => {
     },
     {
       name: 'My Applications',
-      path: '/applications',
+      path: '/my-applications',
       icon: <FileText size={16} className="mr-2 text-gray-500" />
     },
     {
