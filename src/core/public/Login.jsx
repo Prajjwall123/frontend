@@ -27,7 +27,7 @@ const Login = () => {
 
             // Redirect based on user type
             if (isNewUser) {
-                navigate("/profile");  // New users go to profile
+                navigate("/profile", { state: { fromLogin: true } });  // New users go to profile with fromLogin state
             } else {
                 navigate("/");  // Returning users go to home
             }

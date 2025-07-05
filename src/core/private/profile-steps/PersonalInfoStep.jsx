@@ -2,6 +2,20 @@ import React from 'react';
 import { User, Mail, Calendar, MapPin, Home } from 'lucide-react';
 
 const PersonalInfoStep = ({ formData, handleChange }) => {
+    const [showEmailError, setShowEmailError] = React.useState(false);
+
+    const handleEmailFocus = (e) => {
+        e.preventDefault();
+        toast.error('Cannot update the email you registered with', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
+    };
+
     return (
         <div className="space-y-5">
             <div>
@@ -33,7 +47,7 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                     {/* Email */}
                     <div className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700">Email</label>
-                        <div className="relative rounded-md shadow-sm">
+                        <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
                                 <Mail className="h-3.5 w-3.5 text-gray-400" />
                             </div>
@@ -41,11 +55,16 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                                 type="email"
                                 name="email"
                                 value={formData.email || ''}
-                                onChange={handleChange}
-                                className="block w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                readOnly
+                                onFocus={handleEmailFocus}
+                                className="block w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
                                 placeholder="john@example.com"
-                                required
                             />
+                            {showEmailError && (
+                                <div className="absolute -bottom-6 left-0 text-xs text-red-500 mt-1">
+                                    Cannot update the email you registered with
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -60,8 +79,8 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                             </div>
                             <input
                                 type="date"
-                                name="dateOfBirth"
-                                value={formData.dateOfBirth || ''}
+                                name="date_of_birth"
+                                value={formData.date_of_birth || ''}
                                 onChange={handleChange}
                                 className="block w-full pl-8 pr-3 py-2 text-xs text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 required

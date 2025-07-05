@@ -203,25 +203,39 @@ const CourseDetail = () => {
                   ) : scholarships.length > 0 ? (
                     <ul className="space-y-4">
                       {scholarships.map((scholarship, index) => (
-                        <li key={index} className="flex items-start p-4 bg-gray-50 rounded-lg">
-                          <div className="bg-blue-100 p-2 rounded-full mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
-                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <li key={index} className="flex flex-col p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-start">
+                            <div className="bg-blue-100 p-2 rounded-full mr-3 flex-shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{scholarship.scholarship_name || 'Scholarship'}</p>
+                              <p className="text-sm text-gray-600">
+                                {scholarship.amount_per_year
+                                  ? `${scholarship.isPercentage
+                                    ? `${scholarship.amount_per_year * 100}% of tuition`
+                                    : `£${scholarship.amount_per_year.toLocaleString()}`} per year`
+                                  : 'Amount varies'}
+                              </p>
+                              {scholarship.eligibility && (
+                                <p className="text-xs text-gray-500 mt-1">{scholarship.eligibility}</p>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium text-left flex items-center"
+                            onClick={() => {
+                              // You can add a modal or navigation here later
+                              console.log('View details for:', scholarship.scholarship_name);
+                            }}
+                          >
+                            View Details
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                              <path d="m9 18 6-6-6-6" />
                             </svg>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{scholarship.scholarship_name || 'Scholarship'}</p>
-                            <p className="text-sm text-gray-600">
-                              {scholarship.amount_per_year
-                                ? `${scholarship.isPercentage
-                                  ? `${scholarship.amount_per_year * 100}% of tuition`
-                                  : `£${scholarship.amount_per_year.toLocaleString()}`} per year`
-                                : 'Amount varies'}
-                            </p>
-                            {scholarship.eligibility && (
-                              <p className="text-xs text-gray-500 mt-1">{scholarship.eligibility}</p>
-                            )}
-                          </div>
+                          </button>
                         </li>
                       ))}
                     </ul>

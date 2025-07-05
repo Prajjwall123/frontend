@@ -1,6 +1,6 @@
 // src/core/private/ProfileStepper.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Check, User, Book, Globe, FileText, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
@@ -26,6 +26,8 @@ const ProfileStepper = () => {
     const [activeStep, setActiveStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const location = useLocation();
+    const hasShownWelcome = useRef(false);
     const [formData, setFormData] = useState({
         // Personal Info
         gender: '',
@@ -65,6 +67,37 @@ const ProfileStepper = () => {
         },
     });
 
+    // Check if user came from login page
+    const isFromLogin = location.state?.fromLogin === true;
+
+    // Show welcome messages if coming from login
+    useEffect(() => {
+        if (location.state?.fromLogin && !hasShownWelcome.current) {
+            hasShownWelcome.current = true;
+
+            // Use setTimeout to ensure the toasts are shown in sequence
+            setTimeout(() => {
+                toast.info('Please enter your information', {
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+
+                setTimeout(() => {
+                    toast.info('This information will be used in your university applications', {
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                }, 100);
+            }, 100);
+        }
+    }, [location.state]);
+
     // Fetch profile data on component mount
     useEffect(() => {
         const fetchProfile = async () => {
@@ -77,19 +110,31 @@ const ProfileStepper = () => {
 
                 const profile = await getProfile(user._id);
                 if (profile) {
+                    // Map the profile data to match the form fields
+                    const mappedData = {
+                        ...profile,
+                        // Map user info to form fields
+                        fullName: profile.user?.full_name || '',
+                        email: profile.user?.email || '',
+                        // Ensure nested objects are properly merged
+                        date_of_birth: profile.date_of_birth ? profile.date_of_birth.split('T')[0] : '',
+                        application_date: profile.application_date ? profile.application_date.split('T')[0] : '',
+                        english_test: {
+                            ...profile.english_test
+                        }
+                    };
+
                     setFormData(prev => ({
                         ...prev,
-                        ...profile,
-                        // Ensure nested objects are properly merged
-                        english_test: {
-                            ...prev.english_test,
-                            ...(profile.english_test || {})
-                        }
+                        ...mappedData
                     }));
                 }
             } catch (error) {
                 console.error('Error fetching profile:', error);
-                toast.error('Failed to load profile data');
+                // Don't show error toast for 404 - it's expected for new users
+                if (error.response?.status !== 404) {
+                    toast.error('Failed to load profile data');
+                }
             } finally {
                 setIsLoading(false);
             }
