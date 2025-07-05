@@ -1,12 +1,206 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Clock, CreditCard } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Clock, CreditCard, X } from 'lucide-react';
 import { getCourseById } from '../../utils/coursesHelper';
 import { getScholarshipsByUniversityId } from '../../utils/scholarshipHelper';
 import { isAuthenticated } from '../../utils/authHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { toast } from 'react-toastify';
+
+const ApplicationModal = ({ course, onClose, onSubmit }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedIntake, setSelectedIntake] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const steps = [
+    { id: 'intake', title: 'Pick Intake' },
+    { id: 'requirements', title: 'Entry Requirements' },
+    { id: 'terms', title: 'Terms & Conditions' },
+  ];
+
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  const handleSubmit = () => {
+    if (currentStep === steps.length - 1 && !agreedToTerms) {
+      toast.error('Please agree to the terms and conditions');
+      return;
+    }
+
+    if (currentStep === 0 && !selectedIntake) {
+      toast.error('Please select an intake');
+      return;
+    }
+
+    if (currentStep === steps.length - 1) {
+      onSubmit({
+        intake: selectedIntake,
+        course: course.course_name,
+        university: course.university?.name,
+        requirements: course.entry_requirements,
+        terms: course.terms_and_conditions
+      });
+      onClose();
+    } else {
+      handleNext();
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Select Intake</label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              value={selectedIntake}
+              onChange={(e) => setSelectedIntake(e.target.value)}
+            >
+              <option value="">Select an intake</option>
+              {course.intake?.map((intake, index) => (
+                <option key={index} value={intake}>
+                  {intake}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      case 1:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Entry Requirements</h3>
+            <ul className="space-y-2">
+              {course.entry_requirements?.map((req, index) => (
+                <li key={index} className="flex items-start">
+                  <Check size={16} className="text-green-500 mt-1 mr-2 flex-shrink-0" />
+                  <span>{req}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Terms and Conditions</h3>
+            <div className="max-h-60 overflow-y-auto p-4 bg-gray-50 rounded-md text-sm">
+              {course.terms_and_conditions?.map((term, index) => (
+                <p key={index} className="mb-2">
+                  {index + 1}. {term}
+                </p>
+              ))}
+            </div>
+            <div className="flex items-start mt-4">
+              <input
+                id="terms-checkbox"
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="terms-checkbox" className="ml-2 block text-sm text-gray-700">
+                I agree to the terms and conditions
+              </label>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/50" />
+
+      {/* Modal Container */}
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white z-10 px-4 pt-5 pb-4 sm:p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">New Application</h2>
+                <p className="text-sm text-gray-500">{course.course_name} - {course.university?.name}</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Stepper */}
+            <div className="mb-6 mt-4">
+              <div className="flex justify-between">
+                {steps.map((step, index) => (
+                  <div key={step.id} className="flex flex-col items-center">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= index ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                        }`}
+                    >
+                      {index + 1}
+                    </div>
+                    <span className={`text-xs mt-1 ${currentStep >= index ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+                      {step.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="relative mt-2">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2"></div>
+                <div
+                  className="absolute top-1/2 left-0 h-0.5 bg-blue-600 -translate-y-1/2 transition-all duration-300"
+                  style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Step Content */}
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+            {renderStepContent()}
+          </div>
+
+          {/* Footer Buttons */}
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 ${currentStep === steps.length - 1
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                } text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm`}
+            >
+              {currentStep === steps.length - 1 ? 'Create Application' : 'Next'}
+            </button>
+            {currentStep > 0 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Back
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -16,12 +210,12 @@ const CourseDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [scholarships, setScholarships] = useState([]);
   const [isLoadingScholarships, setIsLoadingScholarships] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
 
   // Function to handle authentication check and redirect
   const handleAuthRequired = (e, action) => {
     e?.preventDefault();
     if (!isAuthenticated()) {
-      // Store the current path to redirect back after login
       const redirectPath = `/login?redirect=${encodeURIComponent(location.pathname)}`;
       toast.info('Please login to continue');
       navigate(redirectPath);
@@ -34,16 +228,27 @@ const CourseDetail = () => {
   const handleViewDetails = (e, scholarshipName) => {
     if (handleAuthRequired(e)) {
       console.log('View details for:', scholarshipName);
-      // Add your scholarship details logic here
     }
   };
 
   // Handle apply now click
   const handleApplyNow = (e) => {
     if (handleAuthRequired(e)) {
-      console.log('Apply now clicked');
-      // Add your apply now logic here
+      setShowApplicationModal(true);
     }
+  };
+
+  // Handle application submission
+  const handleApplicationSubmit = (applicationData) => {
+    console.log('Application submitted:', applicationData);
+    toast.success('Application created successfully!', {
+      position: 'top-right',
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   };
 
   useEffect(() => {
@@ -137,7 +342,8 @@ const CourseDetail = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar className="fixed top-0 w-full z-50" />
 
-      <div className="pt-16">
+      {/* Main Content */}
+      <div className="pt-16 flex-1">
         {/* Course Header */}
         <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 py-6">
@@ -173,9 +379,9 @@ const CourseDetail = () => {
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Course Details */}
         <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column */}
             <div className="lg:w-2/3">
               {/* About Course */}
@@ -222,7 +428,7 @@ const CourseDetail = () => {
             </div>
 
             {/* Right Column */}
-            <div className="lg:w-1/3 lg:sticky lg:top-24 space-y-6 w-full">
+            <div className="lg:w-1/3 space-y-6">
               {/* Scholarships */}
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="bg-blue-600 p-4">
@@ -307,7 +513,11 @@ const CourseDetail = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Intake</p>
-                      <p className="text-gray-900 font-medium">{course.intake || 'N/A'}</p>
+                      <p className="text-gray-900 font-medium">
+                        {Array.isArray(course.intake) && course.intake.length > 0
+                          ? course.intake.join(', ')
+                          : 'N/A'}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -366,9 +576,20 @@ const CourseDetail = () => {
               </div>
             </div>
           </div>
+
+          {/* Footer */}
+          <Footer />
+
+          {/* Application Modal */}
+          {showApplicationModal && course && (
+            <ApplicationModal
+              course={course}
+              onClose={() => setShowApplicationModal(false)}
+              onSubmit={handleApplicationSubmit}
+            />
+          )}
         </div>
       </div>
-      <Footer />
     </div>
   );
 };
