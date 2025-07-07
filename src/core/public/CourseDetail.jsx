@@ -247,18 +247,21 @@ const CourseDetail = () => {
 
       toast.success('Application created successfully!', {
         position: 'top-right',
-        autoClose: 5000,
+        autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
       });
 
-      // Close the modal after successful submission
+      // Close the modal
       setShowApplicationModal(false);
 
-      // Optionally, you can redirect or update the UI here
-      // navigate('/applications');
+      // Redirect to my-applications page after a short delay
+      setTimeout(() => {
+        navigate('/my-applications');
+      }, 1000);
+
     } catch (error) {
       console.error('Error creating application:', error);
 

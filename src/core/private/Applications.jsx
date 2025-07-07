@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, FileText, Loader2, Calendar, BookOpen, Building2, Clock, Search } from 'lucide-react';
-import { getUserApplications } from '../../utils/applicationHelper';
+import { Edit, FileText, Loader2, Calendar, BookOpen, Building2, Clock, Search, X } from 'lucide-react';
+import { getUserApplications, cancelApplication } from '../../utils/applicationHelper';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -11,7 +11,8 @@ const statusColors = {
     submitted: 'bg-blue-100 text-blue-800',
     under_review: 'bg-purple-100 text-purple-800',
     accepted: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800'
+    rejected: 'bg-red-100 text-red-800',
+    cancelled: 'bg-gray-100 text-gray-800'
 };
 
 const statusLabels = {
@@ -19,7 +20,8 @@ const statusLabels = {
     submitted: 'Submitted',
     under_review: 'Under Review',
     accepted: 'Accepted',
-    rejected: 'Rejected'
+    rejected: 'Rejected',
+    cancelled: 'Cancelled'
 };
 
 const Applications = () => {
@@ -58,6 +60,20 @@ const Applications = () => {
                 currentSOP: application.sop || ''
             }
         });
+    };
+
+    const handleCancelApplication = async (applicationId) => {
+        if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+            try {
+                await cancelApplication(applicationId);
+                // Remove the deleted application from the list
+                setApplications(applications.filter(app => app._id !== applicationId));
+                toast.success('Application deleted successfully');
+            } catch (error) {
+                console.error('Error deleting application:', error);
+                toast.error(error.response?.data?.message || 'Failed to delete application');
+            }
+        }
     };
 
     const formatDate = (dateString) => {
@@ -123,7 +139,7 @@ const Applications = () => {
                             </p>
                             {!searchTerm && (
                                 <button
-                                    onClick={() => navigate('/courses')}
+                                    onClick={() => navigate('/programs')}
                                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                     Browse Courses
@@ -145,17 +161,27 @@ const Applications = () => {
                                                         {statusLabels[application.status] || application.status}
                                                     </span>
                                                 </div>
-                                                <p className="mt-1 text-sm text-gray-600">
+                                                <p className="mt-1 text-sm text-gray-500">
                                                     {application.course.university.university_name}
                                                 </p>
                                             </div>
                                             <div className="flex space-x-2">
+                                                {application.status !== 'cancelled' && application.status !== 'rejected' && (
+                                                    <button
+                                                        onClick={() => handleCancelApplication(application._id)}
+                                                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                        disabled={application.status === 'cancelled'}
+                                                    >
+                                                        <X className="h-4 w-4 mr-1.5" />
+                                                        Cancel
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleUpdateSOP(application)}
-                                                    className="inline-flex items-center p-2 border border-gray-300 rounded-full text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                                    title="Update SOP"
+                                                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                                 >
-                                                    <FileText className="h-5 w-5" />
+                                                    <Edit className="h-4 w-4 mr-1.5" />
+                                                    Update SOP
                                                 </button>
                                             </div>
                                         </div>
@@ -197,13 +223,6 @@ const Applications = () => {
                                                 onClick={() => navigate(`/course/${application.course._id}`)}
                                             >
                                                 View Course
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                                onClick={() => handleUpdateSOP(application)}
-                                            >
-                                                Update SOP
                                             </button>
                                         </div>
                                     </div>

@@ -45,3 +45,23 @@ export const getUserApplications = async () => {
         throw error;
     }
 };
+
+/**
+ * Delete an application
+ * @param {string} applicationId - The ID of the application to delete
+ * @returns {Promise<Object>} The response data
+ */
+export const cancelApplication = async (applicationId) => {
+    try {
+        const user = getUserInfo();
+        if (!user || !user._id) {
+            throw new Error('User not authenticated');
+        }
+
+        const response = await API.delete(`applications/${applicationId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting application:', error);
+        throw error;
+    }
+};
