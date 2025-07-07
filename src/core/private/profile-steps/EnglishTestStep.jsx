@@ -1,16 +1,21 @@
 // src/core/private/profile-steps/EnglishTestStep.jsx
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Calendar } from 'lucide-react';
+import { BookOpen, Calendar, FileText, Upload } from 'lucide-react';
 
-const EnglishTestStep = ({ formData, handleChange }) => {
+const EnglishTestStep = ({ formData, handleChange, setFormData }) => {
     const [testType, setTestType] = useState(formData.english_test?.test_type || '');
+    const [fileError, setFileError] = useState('');
     const [scores, setScores] = useState({
         reading: formData.english_test?.reading || '',
         writing: formData.english_test?.writing || '',
         speaking: formData.english_test?.speaking || '',
         listening: formData.english_test?.listening || ''
     });
-    const [examDate, setExamDate] = useState(formData.english_test?.exam_date?.split('T')[0] || '');
+    const [examDate, setExamDate] = useState(
+        formData.english_test?.exam_date && formData.english_test.exam_date !== 'null'
+            ? formData.english_test.exam_date.split('T')[0]
+            : ''
+    );
 
     const testTypes = [
         { id: 'ielts', name: 'IELTS' },
@@ -26,6 +31,38 @@ const EnglishTestStep = ({ formData, handleChange }) => {
         pte: { min: 10, max: 90, step: 1 },
         duolingo: { min: 10, max: 160, step: 5 },
         other: { min: 0, max: 100, step: 1 }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        const fileType = file.type;
+
+        if (!validTypes.includes(fileType)) {
+            setFileError('Please upload a PDF, DOC, or DOCX file');
+            return;
+        }
+
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            setFileError('File size should not exceed 10MB');
+            return;
+        }
+
+        setFileError('');
+
+        // Update form data with the file directly at the root level
+        setFormData(prev => ({
+            ...prev,
+            english_test: {
+                ...prev.english_test,
+                // Keep other english_test fields
+            },
+            english_transcript: file  // Add file at root level
+        }));
     };
 
     const handleScoreChange = (section, value) => {
@@ -62,12 +99,18 @@ const EnglishTestStep = ({ formData, handleChange }) => {
     const handleExamDateChange = (e) => {
         const value = e.target.value;
         setExamDate(value);
-        handleChange({
-            target: {
-                name: 'english_test.exam_date',
-                value: value || null
+
+        // Only send the date if it has a value, otherwise send null
+        const dateValue = value ? new Date(value).toISOString() : null;
+
+        // Update the form data
+        setFormData(prev => ({
+            ...prev,
+            english_test: {
+                ...prev.english_test,
+                exam_date: dateValue
             }
-        });
+        }));
     };
 
     const renderScoreInputs = () => {
@@ -147,7 +190,7 @@ const EnglishTestStep = ({ formData, handleChange }) => {
                             <input
                                 type="date"
                                 name="exam_date"
-                                value={examDate}
+                                value={examDate || ''}
                                 onChange={handleExamDateChange}
                                 className="block w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -156,6 +199,46 @@ const EnglishTestStep = ({ formData, handleChange }) => {
 
                     {/* Test Scores */}
                     {testType && renderScoreInputs()}
+
+                    {/* English Test Transcript Upload */}
+                    <div className="space-y-1.5 pt-4 border-t border-gray-200">
+                        <label className="block text-sm font-medium text-gray-700">English Test Transcript</label>
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                                <div className="flex text-sm text-gray-600 justify-center">
+                                    <label
+                                        htmlFor="english_test_transcript"
+                                        className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                    >
+                                        <div className="flex items-center">
+                                            <Upload className="h-4 w-4 mr-1" />
+                                            <span>Upload Transcript</span>
+                                        </div>
+                                        <input
+                                            id="english_test_transcript"
+                                            name="english_test_transcript"
+                                            type="file"
+                                            className="sr-only"
+                                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                            onChange={handleFileChange}
+                                        />
+                                    </label>
+                                    <p className="pl-1">or drag and drop</p>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    PDF, DOC, DOCX up to 10MB
+                                </p>
+                                {formData.english_transcript && (
+                                    <p className="text-sm text-green-600">
+                                        {formData.english_transcript.name || 'File selected'}
+                                    </p>
+                                )}
+                                {fileError && (
+                                    <p className="text-sm text-red-600">{fileError}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

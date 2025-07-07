@@ -36,7 +36,6 @@ const ProfileStepper = () => {
         city: '',
         date_of_birth: '',
         first_language: '',
-        passport_number: '',
 
         // Education
         institution_name: '',
@@ -111,9 +110,12 @@ const ProfileStepper = () => {
 
                 const profile = await getProfile(user._id);
                 if (profile) {
+                    // Remove passport_number from the profile data
+                    const { passport_number, ...profileWithoutPassport } = profile;
+
                     // Map the profile data to match the form fields
                     const mappedData = {
-                        ...profile,
+                        ...profileWithoutPassport,
                         // Map user info to form fields
                         fullName: profile.user?.full_name || '',
                         email: profile.user?.email || '',
@@ -121,7 +123,11 @@ const ProfileStepper = () => {
                         date_of_birth: profile.date_of_birth ? profile.date_of_birth.split('T')[0] : '',
                         application_date: profile.application_date ? profile.application_date.split('T')[0] : '',
                         english_test: {
-                            ...profile.english_test
+                            ...(profile.english_test || {}),
+                            // Ensure exam_date is properly formatted or null
+                            exam_date: profile.english_test?.exam_date
+                                ? profile.english_test.exam_date.split('T')[0]
+                                : null
                         }
                     };
 
@@ -134,7 +140,7 @@ const ProfileStepper = () => {
                 console.error('Error fetching profile:', error);
                 // Don't show error toast for 404 - it's expected for new users
                 if (error.response?.status !== 404) {
-                    toast.error('Failed to load profile data');
+                    // toast.error('Failed to load profile data');
                 }
             } finally {
                 setIsLoading(false);
@@ -252,6 +258,7 @@ const ProfileStepper = () => {
             <StepComponent
                 formData={formData}
                 handleChange={handleChange}
+                setFormData={setFormData}
             />
         );
     };
