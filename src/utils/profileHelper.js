@@ -8,7 +8,10 @@ export const updateProfile = async (profileData) => {
             throw new Error('No user is currently logged in');
         }
 
-        const token = localStorage.getItem('token');
+        // Get auth data from localStorage and parse it
+        const authData = JSON.parse(localStorage.getItem('auth'));
+        const token = authData?.token;
+
         if (!token) {
             throw new Error('No authentication token found');
         }
@@ -38,7 +41,10 @@ export const getProfile = async () => {
             throw new Error('No user is currently logged in');
         }
 
-        const token = localStorage.getItem('token');
+        // Get auth data from localStorage and parse it
+        const authData = JSON.parse(localStorage.getItem('auth'));
+        const token = authData?.token;
+
         if (!token) {
             throw new Error('No authentication token found');
         }
