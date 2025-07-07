@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, FileText, Loader2 } from 'lucide-react';
+import { Edit, FileText, Loader2, Calendar, BookOpen, Building2, Clock, Search } from 'lucide-react';
 import { getUserApplications } from '../../utils/applicationHelper';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
+const statusColors = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    submitted: 'bg-blue-100 text-blue-800',
+    under_review: 'bg-purple-100 text-purple-800',
+    accepted: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800'
+};
+
+const statusLabels = {
+    pending: 'Pending',
+    submitted: 'Submitted',
+    under_review: 'Under Review',
+    accepted: 'Accepted',
+    rejected: 'Rejected'
+};
+
 const Applications = () => {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [sopModal, setSopModal] = useState({ open: false, applicationId: null, sop: '' });
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,11 +45,6 @@ const Applications = () => {
         fetchApplications();
     }, []);
 
-    const handleEditApplication = (applicationId) => {
-        // Navigate to edit page or open edit modal
-        console.log('Edit application:', applicationId);
-    };
-
     const handleUpdateSOP = (application) => {
         navigate('/sop-writer', {
             state: {
@@ -49,182 +60,160 @@ const Applications = () => {
         });
     };
 
-    const handleSOPSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            // TODO: Implement SOP update API call
-            console.log('Updating SOP for:', sopModal.applicationId, sopModal.sop);
-            // await updateApplicationSOP(sopModal.applicationId, sopModal.sop);
-            toast.success('SOP updated successfully');
-            setSopModal({ open: false, applicationId: null, sop: '' });
-            // Refresh applications
-            const data = await getUserApplications();
-            setApplications(data);
-        } catch (error) {
-            console.error('Error updating SOP:', error);
-            toast.error('Failed to update SOP');
-        }
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
     };
+
+    const filteredApplications = applications.filter(app => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            app.course.course_name.toLowerCase().includes(searchLower) ||
+            app.course.university.university_name.toLowerCase().includes(searchLower) ||
+            app.status.toLowerCase().includes(searchLower)
+        );
+    });
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading your applications...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen bg-gray-50">
             <Navbar />
-            <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8 mt-26">
-                <div className="max-w-7xl mx-auto">
-                    <div className="sm:flex sm:items-center">
-                        <div className="sm:flex-auto">
-                            <h1 className="text-2xl font-semibold text-gray-900">My Applications</h1>
-                            <p className="mt-2 text-sm text-gray-700">
-                                A list of all your course applications including their current status.
+            <main className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ">
+                <div className="mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 mt-16">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
+                            <p className="mt-2 text-sm text-gray-600">
+                                Track and manage all your course applications in one place
                             </p>
                         </div>
-                    </div>
-
-                    <div className="mt-8 flex flex-col">
-                        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                                    <table className="min-w-full divide-y divide-gray-300">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                                                    Application ID
-                                                </th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                                    University
-                                                </th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                                    Course
-                                                </th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                                    Status
-                                                </th>
-                                                <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                                    <span className="sr-only">Actions</span>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200 bg-white">
-                                            {applications.length > 0 ? (
-                                                applications.map((application) => (
-                                                    <tr key={application._id}>
-                                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                            {application._id.substring(0, 8)}...
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {application.course?.university?.university_name || 'N/A'}
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                            {application.course?.course_name || 'N/A'}
-                                                        </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm">
-                                                            <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${application.status === 'submitted'
-                                                                ? 'bg-blue-100 text-blue-800'
-                                                                : application.status === 'approved'
-                                                                    ? 'bg-green-100 text-green-800'
-                                                                    : 'bg-yellow-100 text-yellow-800'
-                                                                }`}>
-                                                                {application.status || 'pending'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
-                                                            <button
-                                                                onClick={() => handleEditApplication(application._id)}
-                                                                className="text-blue-600 hover:text-blue-900"
-                                                            >
-                                                                <Edit className="h-5 w-5" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleUpdateSOP(application)}
-                                                                className="text-indigo-600 hover:text-indigo-900"
-                                                                title="Update SOP"
-                                                            >
-                                                                <FileText className="h-5 w-5" />
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
-                                                        No applications found. Start by applying to a course.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                        <div className="relative w-full sm:w-96">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
                             </div>
+                            <input
+                                type="text"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="Search applications..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
                     </div>
-                </div>
-            </div>
-            <Footer />
 
-            {/* SOP Update Modal */}
-            {sopModal.open && (
-                <div className="fixed z-10 inset-0 overflow-y-auto">
-                    <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                    {filteredApplications.length === 0 ? (
+                        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">No applications found</h3>
+                            <p className="text-gray-500 mb-6">
+                                {searchTerm ? 'No applications match your search.' : 'You haven\'t applied to any courses yet.'}
+                            </p>
+                            {!searchTerm && (
+                                <button
+                                    onClick={() => navigate('/courses')}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    Browse Courses
+                                </button>
+                            )}
                         </div>
-                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <div className="sm:flex sm:items-start">
-                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                        <h3 className="text-lg leading-6 font-medium text-gray-900">Update Statement of Purpose</h3>
-                                        <div className="mt-4">
-                                            <form onSubmit={handleSOPSubmit}>
-                                                <div>
-                                                    <label htmlFor="sop" className="block text-sm font-medium text-gray-700">
-                                                        Your Statement of Purpose
-                                                    </label>
-                                                    <div className="mt-1">
-                                                        <textarea
-                                                            id="sop"
-                                                            name="sop"
-                                                            rows={8}
-                                                            className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
-                                                            placeholder="Explain why you want to join this course..."
-                                                            value={sopModal.sop}
-                                                            onChange={(e) => setSopModal({ ...sopModal, sop: e.target.value })}
-                                                            required
-                                                        />
-                                                    </div>
+                    ) : (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+                            {filteredApplications.map((application) => (
+                                <div key={application._id} className="bg-white overflow-hidden shadow rounded-xl hover:shadow-md transition-shadow duration-200">
+                                    <div className="p-6">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <div className="flex items-center">
+                                                    <h3 className="text-lg font-semibold text-gray-900">
+                                                        {application.course.course_name}
+                                                    </h3>
+                                                    <span className={`ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[application.status] || 'bg-gray-100 text-gray-800'}`}>
+                                                        {statusLabels[application.status] || application.status}
+                                                    </span>
                                                 </div>
-                                                <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                                                    <button
-                                                        type="submit"
-                                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm"
-                                                    >
-                                                        Update SOP
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                                                        onClick={() => setSopModal({ open: false, applicationId: null, sop: '' })}
-                                                    >
-                                                        Cancel
-                                                    </button>
+                                                <p className="mt-1 text-sm text-gray-600">
+                                                    {application.course.university.university_name}
+                                                </p>
+                                            </div>
+                                            <div className="flex space-x-2">
+                                                <button
+                                                    onClick={() => handleUpdateSOP(application)}
+                                                    className="inline-flex items-center p-2 border border-gray-300 rounded-full text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                    title="Update SOP"
+                                                >
+                                                    <FileText className="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                                            <div className="flex items-start">
+                                                <Calendar className="flex-shrink-0 h-5 w-5 text-gray-400" />
+                                                <div className="ml-3">
+                                                    <p className="text-sm font-medium text-gray-500">Intake</p>
+                                                    <p className="text-sm text-gray-900 capitalize">
+                                                        {application.intake || 'Not specified'}
+                                                    </p>
                                                 </div>
-                                            </form>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <Clock className="flex-shrink-0 h-5 w-5 text-gray-400" />
+                                                <div className="ml-3">
+                                                    <p className="text-sm font-medium text-gray-500">Applied on</p>
+                                                    <p className="text-sm text-gray-900">
+                                                        {application.appliedAt ? formatDate(application.appliedAt) : 'N/A'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <Clock className="flex-shrink-0 h-5 w-5 text-gray-400" />
+                                                <div className="ml-3">
+                                                    <p className="text-sm font-medium text-gray-500">Last updated on</p>
+                                                    <p className="text-sm text-gray-900">
+                                                        {application.updatedAt ? formatDate(application.updatedAt) : 'N/A'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-5 flex justify-end space-x-3">
+                                            <button
+                                                type="button"
+                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                onClick={() => navigate(`/course/${application.course._id}`)}
+                                            >
+                                                View Course
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                onClick={() => handleUpdateSOP(application)}
+                                            >
+                                                Update SOP
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
-                    </div>
+                    )}
                 </div>
-            )}
+            </main>
+            <Footer />
         </div>
     );
 };
