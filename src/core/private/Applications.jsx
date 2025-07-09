@@ -29,6 +29,9 @@ const Applications = () => {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [applicationToCancel, setApplicationToCancel] = useState(null);
+    const [isCancelling, setIsCancelling] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -63,17 +66,26 @@ const Applications = () => {
         });
     };
 
-    const handleCancelApplication = async (applicationId) => {
-        if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
-            try {
-                await cancelApplication(applicationId);
-                // Remove the deleted application from the list
-                setApplications(applications.filter(app => app._id !== applicationId));
-                toast.success('Application deleted successfully');
-            } catch (error) {
-                console.error('Error deleting application:', error);
-                toast.error(error.response?.data?.message || 'Failed to delete application');
-            }
+    const handleCancelApplication = (applicationId) => {
+        setApplicationToCancel(applicationId);
+        setShowCancelModal(true);
+    };
+
+    const confirmCancelApplication = async () => {
+        if (!applicationToCancel) return;
+
+        setIsCancelling(true);
+        try {
+            await cancelApplication(applicationToCancel);
+            setApplications(applications.filter(app => app._id !== applicationToCancel));
+            toast.success('Application cancelled successfully');
+            setShowCancelModal(false);
+        } catch (error) {
+            console.error('Error cancelling application:', error);
+            toast.error(error.response?.data?.message || 'Failed to cancel application');
+        } finally {
+            setIsCancelling(false);
+            setApplicationToCancel(null);
         }
     };
 
@@ -108,6 +120,49 @@ const Applications = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
+
+            {/* Cancel Confirmation Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                        <div className="text-center">
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                                <X className="h-6 w-6 text-red-600" />
+                            </div>
+                            <h3 className="mt-3 text-lg font-medium text-gray-900">Cancel Application</h3>
+                            <div className="mt-2">
+                                <p className="text-sm text-gray-500">
+                                    Are you sure you want to cancel this application? This action cannot be undone.
+                                </p>
+                            </div>
+                            <div className="mt-5 flex justify-center space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    disabled={isCancelling}
+                                >
+                                    No, keep it
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={confirmCancelApplication}
+                                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                                    disabled={isCancelling}
+                                >
+                                    {isCancelling ? (
+                                        <>
+                                            <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 inline" />
+                                            Cancelling...
+                                        </>
+                                    ) : 'Yes, cancel it'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <main className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ">
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 mt-16">
@@ -220,7 +275,7 @@ const Applications = () => {
                                         <div className="mt-5 flex justify-end space-x-3">
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                                 onClick={() => navigate(`/course/${application.course._id}`)}
                                             >
                                                 View Course
