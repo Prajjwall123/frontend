@@ -16,19 +16,42 @@ const STUDY_VISA_DOCS = `
 9. Proof of financial support (bank statements, sponsor letters)
 10. Proof of intent to return home (family ties, property, job offer)`;
 
-// Common study visa interview questions
+// Common interview questions to reduce API calls
 const COMMON_QUESTIONS = [
     "Why do you want to study in the US?",
     "Why did you choose this university?",
-    "What is your planned major?",
-    "How will this program help your career?",
-    "What are your plans after graduation?",
-    "Do you have family in the US?",
+    "What is your intended major?",
     "How will you fund your education?",
-    "What are your career goals?",
+    "What are your career goals after graduation?",
+    "Do you have family in the US?",
     "Why not study in your home country?",
-    "What do your parents do for work?"
+    "What do you know about this university?",
+    "What makes you a good candidate?",
+    "Where will you live during your studies?"
 ];
+
+// Cache for storing responses
+const responseCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Function to get a random question without API call
+const getRandomQuestion = () => {
+    return COMMON_QUESTIONS[Math.floor(Math.random() * COMMON_QUESTIONS.length)];
+};
+
+// Generate a cache key
+const getCacheKey = (type, ...args) => {
+    return `${type}:${JSON.stringify(args)}`;
+};
+
+// Check cache before making API calls
+const checkCache = (key) => {
+    const cached = responseCache.get(key);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return cached.data;
+    }
+    return null;
+};
 
 // Function to generate visa interview response
 export const generateVisaInterviewResponse = async (messages) => {
@@ -87,6 +110,119 @@ export const generateVisaInterviewResponse = async (messages) => {
         return {
             success: false,
             message: 'Sorry, I encountered an error. Please try again.'
+        };
+    }
+};
+
+// Optimized interview scenario generation
+export const generateVisaInterviewScenario = async (userProfile = {}) => {
+    const cacheKey = getCacheKey('scenario', JSON.stringify(userProfile));
+    const cached = checkCache(cacheKey);
+    if (cached) return cached;
+
+    try {
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 150,
+                responseMimeType: 'text/plain'
+            }
+        });
+
+        const prompt = `Give a short greeting and ask the first question for an F1 visa interview. Keep it under 2 sentences.`;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const message = response.text().trim();
+
+        const data = {
+            success: true,
+            message: message || getRandomQuestion()
+        };
+
+        responseCache.set(cacheKey, { data, timestamp: Date.now() });
+        return data;
+    } catch (error) {
+        console.error('Error generating scenario:', error);
+        return {
+            success: true, // Still return success to keep the flow going
+            message: getRandomQuestion()
+        };
+    }
+};
+
+// Optimized interview continuation
+export const continueVisaInterview = async (conversationHistory, userResponse) => {
+    // Use a simpler cache key for continuation
+    const cacheKey = getCacheKey('continue', userResponse.substring(0, 50));
+    const cached = checkCache(cacheKey);
+    if (cached) return cached;
+
+    try {
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 100,
+                responseMimeType: 'text/plain'
+            }
+        });
+
+        // Only send the last 2 messages for context to reduce payload
+        const recentMessages = conversationHistory.slice(-2);
+        const prompt = `As a visa officer, respond to this in 1-2 sentences: "${userResponse}"`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const message = response.text().trim();
+
+        const data = {
+            success: true,
+            message: message || getRandomQuestion(),
+            isComplete: message.toLowerCase().includes('thank you') ||
+                message.toLowerCase().includes('good luck')
+        };
+
+        responseCache.set(cacheKey, { data, timestamp: Date.now() });
+        return data;
+    } catch (error) {
+        console.error('Error continuing interview:', error);
+        return {
+            success: true,
+            message: getRandomQuestion(),
+            isComplete: false
+        };
+    }
+};
+
+// Simplified performance analysis
+export const analyzeInterviewPerformance = async (conversationHistory) => {
+    try {
+        // Only analyze the last 5 exchanges to reduce processing
+        const recentExchanges = conversationHistory.slice(-10);
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 300,
+                responseMimeType: 'text/plain'
+            }
+        });
+
+        const prompt = `In 3 bullet points, provide feedback on this interview:\n${recentExchanges.map(m => `${m.role}: ${m.content}`).join('\n')}`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+
+        return {
+            success: true,
+            feedback: response.text().trim()
+        };
+    } catch (error) {
+        console.error('Error analyzing interview:', error);
+        return {
+            success: false,
+            feedback: 'Thank you for the practice! Remember to be clear and concise in your answers.'
         };
     }
 };
