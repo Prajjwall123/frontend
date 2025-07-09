@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Clock, CreditCard, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Clock, CreditCard, X, Award } from 'lucide-react';
 import { getCourseById } from '../../utils/coursesHelper';
-import { getScholarshipsByUniversityId } from '../../utils/scholarshipHelper';
-import { isAuthenticated } from '../../utils/authHelper';
+import { getScholarshipsByUniversityId, applyForScholarship } from '../../utils/scholarshipHelper';
+import { isAuthenticated, getUserInfo } from '../../utils/authHelper';
 import { createApplication } from '../../utils/applicationHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -204,6 +204,131 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
   );
 };
 
+const ScholarshipApplicationModal = ({ scholarship, course, onClose, onSuccess }) => {
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const currentUser = getUserInfo();
+
+  const handleSubmit = async () => {
+    if (!agreedToTerms) {
+      toast.error('Please agree to the terms and conditions');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await applyForScholarship(scholarship._id, currentUser._id);
+      toast.success('Scholarship application submitted successfully!');
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Error applying for scholarship:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to apply for scholarship';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Apply for {scholarship.scholarship_name}
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-500"
+              disabled={isSubmitting}
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-800">Scholarship Details</h3>
+              <p className="mt-1 text-sm text-blue-700">
+                {scholarship.amount_per_year
+                  ? `Amount: AUD $${scholarship.amount_per_year.toLocaleString()} per year`
+                  : 'Amount: Varies'}
+              </p>
+              {scholarship.terms_and_conditions && (
+                <div className="mt-2">
+                  <h4 className="text-sm font-medium text-blue-800">Requirements:</h4>
+                  <p className="text-xs text-blue-700">{scholarship.terms_and_conditions}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="prose prose-sm max-w-none">
+              <h4 className="font-medium text-gray-900">Terms and Conditions</h4>
+              <div className="mt-2 text-sm text-gray-600 space-y-2">
+                <p>By applying for this scholarship, you agree to the following terms:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>You meet all the eligibility criteria specified for this scholarship</li>
+                  <li>All information provided in your application is accurate and complete</li>
+                  <li>You understand that scholarship decisions are final and at the discretion of the university</li>
+                  <li>You may be required to provide additional documentation to verify your eligibility</li>
+                  <li>The scholarship may be revoked if any information provided is found to be false</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="terms"
+                  name="terms"
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="terms" className="font-medium text-gray-700">
+                  I agree to the terms and conditions
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !agreedToTerms}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Applying...
+                  </>
+                ) : 'Apply for Scholarship'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -213,6 +338,10 @@ const CourseDetail = () => {
   const [scholarships, setScholarships] = useState([]);
   const [isLoadingScholarships, setIsLoadingScholarships] = useState(false);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showScholarshipModal, setShowScholarshipModal] = useState(false);
+  const [selectedScholarship, setSelectedScholarship] = useState(null);
+  const [appliedScholarships, setAppliedScholarships] = useState([]);
+  const currentUser = getUserInfo();
 
   // Function to handle authentication check and redirect
   const handleAuthRequired = (e, action) => {
@@ -276,16 +405,29 @@ const CourseDetail = () => {
     }
   };
 
+  const handleScholarshipApply = (scholarship) => {
+    setSelectedScholarship(scholarship);
+    setShowScholarshipModal(true);
+  };
+
+  const handleScholarshipApplied = () => {
+    setAppliedScholarships(prev => [...prev, selectedScholarship._id]);
+  };
+
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         setIsLoading(true);
         const courseData = await getCourseById(id);
         setCourse(courseData);
+        console.log('Course data:', courseData); // Debug log
 
         // Fetch scholarships for the university
         if (courseData.university?._id) {
-          await fetchUniversityScholarships(courseData.university._id);
+          console.log('Fetching scholarships for university:', courseData.university._id);
+          await fetchScholarships(courseData.university._id);
+        } else {
+          console.log('No university ID found in course data');
         }
       } catch (error) {
         console.error('Error:', error);
@@ -297,13 +439,22 @@ const CourseDetail = () => {
     fetchCourse();
   }, [id]);
 
-  const fetchUniversityScholarships = async (universityId) => {
+  const fetchScholarships = async (universityId) => {
+    if (!universityId) return;
+
+    setIsLoadingScholarships(true);
     try {
-      setIsLoadingScholarships(true);
-      const scholarshipsData = await getScholarshipsByUniversityId(universityId);
+      const response = await getScholarshipsByUniversityId(universityId);
+      console.log('Scholarships response:', response); // Debug log
+
+      // The response is already the scholarships array
+      const scholarshipsData = Array.isArray(response) ? response : [];
+
+      console.log('Extracted scholarships:', scholarshipsData); // Debug log
       setScholarships(scholarshipsData);
     } catch (error) {
       console.error('Error fetching scholarships:', error);
+      toast.error('Failed to load scholarships');
       setScholarships([]);
     } finally {
       setIsLoadingScholarships(false);
@@ -455,58 +606,44 @@ const CourseDetail = () => {
             {/* Right Column */}
             <div className="lg:w-1/3 space-y-6">
               {/* Scholarships */}
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="bg-blue-600 p-4">
-                  <h3 className="text-lg font-semibold text-white">Available Scholarships</h3>
-                </div>
-                <div className="p-5">
-                  {isLoadingScholarships ? (
-                    <div className="animate-pulse space-y-4">
-                      {[1, 2].map((i) => (
-                        <div key={i} className="h-16 bg-gray-100 rounded-lg"></div>
-                      ))}
-                    </div>
-                  ) : scholarships.length > 0 ? (
-                    <ul className="space-y-4">
-                      {scholarships.map((scholarship, index) => (
-                        <li key={index} className="flex flex-col p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-start">
-                            <div className="bg-blue-100 p-2 rounded-full mr-3 flex-shrink-0">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">{scholarship.scholarship_name || 'Scholarship'}</p>
-                              <p className="text-sm text-gray-600">
-                                {scholarship.amount_per_year
-                                  ? `${scholarship.isPercentage
-                                    ? `${scholarship.amount_per_year * 100}% of tuition`
-                                    : `£${scholarship.amount_per_year.toLocaleString()}`} per year`
-                                  : 'Amount varies'}
+              {scholarships.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Available Scholarships</h3>
+                  <div className="space-y-4">
+                    {scholarships.map((scholarship) => (
+                      <div key={scholarship._id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{scholarship.scholarship_name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {scholarship.amount_per_year
+                                ? `AUD $${scholarship.amount_per_year.toLocaleString()} per year`
+                                : 'Amount varies'}
+                            </p>
+                            {scholarship.terms_and_conditions && (
+                              <p className="text-xs text-gray-500 mt-2">
+                                <span className="font-medium">Requirements:</span> {scholarship.terms_and_conditions}
                               </p>
-                              {scholarship.eligibility && (
-                                <p className="text-xs text-gray-500 mt-1">{scholarship.eligibility}</p>
-                              )}
-                            </div>
+                            )}
                           </div>
-                          <button
-                            className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium text-left flex items-center"
-                            onClick={(e) => handleViewDetails(e, scholarship.scholarship_name)}
-                          >
-                            View Details
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-                              <path d="m9 18 6-6-6-6" />
-                            </svg>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-gray-500">No scholarships available for this course.</p>
-                  )}
+                          {appliedScholarships.includes(scholarship._id) ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Applied
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleScholarshipApply(scholarship)}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              Apply Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Quick Facts */}
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -611,6 +748,16 @@ const CourseDetail = () => {
               course={course}
               onClose={() => setShowApplicationModal(false)}
               onSubmit={handleApplicationSubmit}
+            />
+          )}
+
+          {/* Scholarship Application Modal */}
+          {showScholarshipModal && selectedScholarship && (
+            <ScholarshipApplicationModal
+              scholarship={selectedScholarship}
+              course={course}
+              onClose={() => setShowScholarshipModal(false)}
+              onSuccess={handleScholarshipApplied}
             />
           )}
         </div>

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Save, ExternalLink, MessageSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import VoiceChatBot from '../../components/VoiceChatBot';
@@ -70,10 +72,32 @@ const SOPWriter = () => {
         navigate(`/course/${courseData.courseId}`);
     };
 
-    const handleSubmit = () => {
-        // Handle SOP submission
-        console.log('SOP submitted:', content);
-        alert('SOP submitted successfully!');
+    const handleSubmit = async () => {
+        const isConfirmed = window.confirm('Are you sure you want to submit this SOP?');
+
+        if (isConfirmed) {
+            try {
+                // Handle SOP submission
+                console.log('SOP submitted:', content);
+
+                // Show success toast
+                toast.success('SOP updated successfully!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+
+                // Optional: Navigate back or perform other actions after submission
+                // navigate('/applications');
+            } catch (error) {
+                console.error('Error submitting SOP:', error);
+                toast.error('Failed to update SOP. Please try again.');
+            }
+        }
     };
 
     // Handle messages from the chatbot

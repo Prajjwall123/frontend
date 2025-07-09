@@ -44,4 +44,33 @@ const getScholarshipsByUniversityId = async (universityId) => {
     }
 };
 
-export { getScholarshipById, getScholarshipsByIds, getScholarshipsByUniversityId };
+const applyForScholarship = async (scholarshipId, userId) => {
+    try {
+        const response = await API.post('/scholarship-applications', {
+            scholarshipId,
+            userId
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error applying for scholarship:', error);
+        throw error;
+    }
+};
+
+const getUserScholarshipApplications = async (userId) => {
+    try {
+        const response = await API.get(`/scholarship-applications/me?userId=${userId}`);
+        return response.data?.data || [];
+    } catch (error) {
+        console.error('Error fetching scholarship applications:', error);
+        throw error;
+    }
+};
+
+export {
+    getScholarshipById,
+    getScholarshipsByIds,
+    getScholarshipsByUniversityId,
+    applyForScholarship,
+    getUserScholarshipApplications
+};
