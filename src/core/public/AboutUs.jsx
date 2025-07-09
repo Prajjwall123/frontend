@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import Chatbot from '../../components/Chatbot';
 import graduationImg from "../../assets/graduation.png";
 import aboutImage from "../../assets/about.png";
 import profileSideImage from "../../assets/profile-side-image.jpg";
@@ -307,6 +308,7 @@ export default function AboutUs() {
                         </motion.div>
                     </div>
                 </div>
+                <Chatbot />
             </main>
             <Footer />
         </div>

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import Chatbot from '../../components/Chatbot';
 import { getUniversityById } from '../../utils/universityHelper';
 import { getCourseById } from '../../utils/coursesHelper';
 import { getScholarshipsByUniversityId } from '../../utils/scholarshipHelper';
@@ -100,6 +101,7 @@ const UniversityDetailDynamic = () => {
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             <Navbar />
+            <Chatbot />
             <div className="pt-16">
                 {/* University Header */}
                 <div className="bg-white border-b border-gray-200">

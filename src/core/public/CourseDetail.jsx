@@ -7,6 +7,7 @@ import { isAuthenticated } from '../../utils/authHelper';
 import { createApplication } from '../../utils/applicationHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import Chatbot from '../../components/Chatbot';
 import { toast } from 'react-toastify';
 
 const ApplicationModal = ({ course, onClose, onSubmit }) => {
@@ -365,7 +366,7 @@ const CourseDetail = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar className="fixed top-0 w-full z-50" />
-
+      <Chatbot />
       {/* Main Content */}
       <div className="pt-16 flex-1">
         {/* Course Header */}

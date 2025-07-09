@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import VoiceChatBot from '../../components/VoiceChatBot';
 import Typewriter from '../../components/Typewriter';
+import Chatbot from '../../components/Chatbot';
 import './SOPWriter.css';
 
 const SOPWriter = () => {
@@ -95,7 +96,7 @@ const SOPWriter = () => {
     }];
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div className="min-h-screen bg-gray-50">
             <Navbar />
             <div className="pt-20 flex-1">
                 <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
@@ -226,6 +227,7 @@ const SOPWriter = () => {
                     </div>
                 </div>
             </div>
+            <Chatbot />
             <Footer />
         </div>
     );

@@ -5,6 +5,7 @@ import { getUserApplications, cancelApplication } from '../../utils/applicationH
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import Chatbot from '../../components/Chatbot';
 
 const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -232,6 +233,7 @@ const Applications = () => {
                     )}
                 </div>
             </main>
+            <Chatbot />
             <Footer />
         </div>
     );

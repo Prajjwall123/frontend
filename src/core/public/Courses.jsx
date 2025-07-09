@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, BookOpen, Clock, GraduationCap, Award } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import Chatbot from '../../components/Chatbot';
 import { getCourses } from '../../utils/coursesHelper';
 import cover from '../../assets/cover2.jpg';
 
@@ -354,6 +355,7 @@ const Courses = () => {
         </div>
       </div>
 
+      <Chatbot />
       <Footer />
     </div>
   );
