@@ -93,7 +93,8 @@ const VisaInterview = () => {
         {
             id: 1,
             content: "Hello! I'm your visa interview assistant. How can I help you prepare for your F-1 visa interview today?",
-            role: 'assistant'
+            role: 'assistant',
+            timestamp: new Date()
         }
     ]);
     const messagesEndRef = useRef(null);
@@ -105,41 +106,38 @@ const VisaInterview = () => {
         // Initialize speech synthesis
         synthRef.current = window.speechSynthesis;
 
-        // Initialize speech recognition if available
-        if (typeof window !== 'undefined') {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = false;
-                recognitionRef.current.interimResults = false;
-                recognitionRef.current.lang = 'en-US';
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognitionRef.current = new window.webkitSpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false;
+            recognitionRef.current.lang = 'en-US';
 
-                recognitionRef.current.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    console.log('Voice input:', transcript);
-                    setInput(prev => prev ? `${prev} ${transcript}` : transcript);
-                };
+            recognitionRef.current.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                console.log('Voice input:', transcript);
+                setInput(transcript);
+                // Auto-submit after speech input
+                if (transcript.trim()) {
+                    handleSubmit(new Event('submit'), transcript);
+                }
+            };
 
-                recognitionRef.current.onerror = (event) => {
-                    console.error('Speech recognition error', event.error);
-                    setIsListening(false);
+            recognitionRef.current.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                setIsListening(false);
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 1,
+                    role: 'assistant',
+                    content: 'Sorry, there was an error with voice recognition. Please try again or type your request.',
+                    isError: true,
+                    timestamp: new Date()
+                }]);
+            };
 
-                    const errorMessage = {
-                        id: Date.now() + 1,
-                        role: 'assistant',
-                        content: 'Sorry, there was an error with voice recognition. Please try again or type your request.',
-                        isError: true
-                    };
-
-                    setMessages(prev => [...prev, errorMessage]);
-                };
-
-                recognitionRef.current.onend = () => {
-                    if (isListening) {
-                        recognitionRef.current.start();
-                    }
-                };
-            }
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
         }
 
         return () => {
@@ -150,7 +148,7 @@ const VisaInterview = () => {
                 synthRef.current.cancel();
             }
         };
-    }, [isListening]);
+    }, []);
 
     // Speak the assistant's messages when isSpeaking is true
     useEffect(() => {
@@ -163,8 +161,14 @@ const VisaInterview = () => {
     }, [messages, isSpeaking]);
 
     const toggleListening = () => {
-        if (!recognitionRef.current) {
-            alert('Speech recognition is not supported in your browser');
+        if (!('webkitSpeechRecognition' in window)) {
+            setMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                role: 'assistant',
+                content: 'Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.',
+                isError: true,
+                timestamp: new Date()
+            }]);
             return;
         }
 
@@ -172,13 +176,23 @@ const VisaInterview = () => {
             recognitionRef.current.stop();
             setIsListening(false);
         } else {
-            setInput('');
-            try {
-                recognitionRef.current.start();
-                setIsListening(true);
-            } catch (error) {
-                console.error('Error starting speech recognition:', error);
-            }
+            // Request microphone permission
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => {
+                    setInput(''); // Clear input when starting new recording
+                    recognitionRef.current.start();
+                    setIsListening(true);
+                })
+                .catch(error => {
+                    console.error('Microphone access denied:', error);
+                    setMessages(prev => [...prev, {
+                        id: Date.now() + 1,
+                        role: 'assistant',
+                        content: 'Microphone access is required for voice input. Please allow microphone permissions in your browser settings.',
+                        isError: true,
+                        timestamp: new Date()
+                    }]);
+                });
         }
     };
 
@@ -191,6 +205,11 @@ const VisaInterview = () => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
+
+        utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+        };
+
         synthRef.current.speak(utterance);
     };
 
@@ -202,28 +221,40 @@ const VisaInterview = () => {
         scrollToBottom();
     }, [messages]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!input.trim()) return;
+    const handleSubmit = async (e, text = '') => {
+        if (e) e.preventDefault();
+
+        const message = text || input;
+        if (!message.trim()) return;
 
         const userMessage = {
             id: Date.now(),
-            content: input,
-            role: 'user'
+            content: message,
+            role: 'user',
+            timestamp: new Date()
         };
 
-        setMessages(prev => [...prev, userMessage]);
+        const updatedMessages = [...messages, userMessage];
+        setMessages(updatedMessages);
         setInput('');
         setIsLoading(true);
 
         try {
-            const response = await generateVisaInterviewResponse(input);
-            const responseContent = typeof response === 'object' ? response.message : response;
+            // Format the messages array to match what generateVisaInterviewResponse expects
+            const response = await generateVisaInterviewResponse([
+                ...messages.map(m => ({ content: m.content, role: m.role })),
+                { content: message, role: 'user' }
+            ]);
+
+            // Check if the response is successful and has a message
+            const responseContent = response && response.message ? response.message :
+                'I apologize, but I encountered an issue generating a response. Please try again.';
 
             const botMessage = {
                 id: Date.now() + 1,
                 content: responseContent,
-                role: 'assistant'
+                role: 'assistant',
+                timestamp: new Date()
             };
 
             setMessages(prev => [...prev, botMessage]);
@@ -234,7 +265,8 @@ const VisaInterview = () => {
                 id: Date.now() + 1,
                 content: "I'm sorry, I encountered an error. Please try again.",
                 role: 'assistant',
-                isError: true
+                isError: true,
+                timestamp: new Date()
             };
             setMessages(prev => [...prev, errorMessage]);
         }
@@ -316,7 +348,7 @@ const VisaInterview = () => {
                                             onChange={(e) => setInput(e.target.value)}
                                             placeholder="Type your question about the visa interview..."
                                             className="w-full pl-4 pr-24 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                            disabled={isLoading}
+                                            disabled={isLoading || isListening}
                                         />
                                         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                                             <button
@@ -329,12 +361,18 @@ const VisaInterview = () => {
                                                 disabled={isLoading}
                                                 title={isListening ? 'Stop listening' : 'Start voice input'}
                                             >
-                                                <Mic className="w-5 h-5" />
+                                                {isListening ? (
+                                                    <div className="w-5 h-5 flex items-center justify-center">
+                                                        <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
+                                                    </div>
+                                                ) : (
+                                                    <Mic className="w-5 h-5" />
+                                                )}
                                             </button>
                                             <button
                                                 type="submit"
                                                 className="p-2 text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                disabled={!input.trim() || isLoading}
+                                                disabled={!input.trim() || isLoading || isListening}
                                                 title="Send message"
                                             >
                                                 <Send className="w-5 h-5" />
