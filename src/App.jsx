@@ -21,6 +21,7 @@ const SOPWriter = lazy(() => import("./core/public/SOPWriter"));
 const VisaInterview = lazy(() => import("./core/public/VisaInterview"));
 const Applications = lazy(() => import("./core/private/Applications"));
 const AboutUs = lazy(() => import("./core/public/AboutUs"));
+const ContactUs = lazy(() => import("./core/public/ContactUs"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -41,6 +42,7 @@ function App() {
     { path: "/visa-interview", element: <Suspense fallback={<div>Loading...</div>}><VisaInterview /></Suspense> },
     { path: "/my-applications", element: <Suspense fallback={<div>Loading...</div>}><Applications /></Suspense> },
     { path: "/about", element: <Suspense fallback={<div>Loading...</div>}><AboutUs /></Suspense> },
+    { path: "/contact", element: <Suspense fallback={<div>Loading...</div>}><ContactUs /></Suspense> },
   ];
 
   return (
