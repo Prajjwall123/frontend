@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { path } from 'framer-motion/client';
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const ProfileStepper = lazy(() => import("./core/private/ProfileStepper"));
 const SOPWriter = lazy(() => import("./core/public/SOPWriter"));
 const VisaInterview = lazy(() => import("./core/public/VisaInterview"));
 const Applications = lazy(() => import("./core/private/Applications"));
+const AboutUs = lazy(() => import("./core/public/AboutUs"));
 
 function App() {
   const [count, setCount] = useState(0)
@@ -38,6 +40,7 @@ function App() {
     { path: "/sop-writer", element: <Suspense fallback={<div>Loading...</div>}><SOPWriter /></Suspense> },
     { path: "/visa-interview", element: <Suspense fallback={<div>Loading...</div>}><VisaInterview /></Suspense> },
     { path: "/my-applications", element: <Suspense fallback={<div>Loading...</div>}><Applications /></Suspense> },
+    { path: "/about", element: <Suspense fallback={<div>Loading...</div>}><AboutUs /></Suspense> },
   ];
 
   return (
