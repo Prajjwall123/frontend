@@ -16,7 +16,7 @@ const useVoices = () => {
             // Prefer natural-sounding voices
             const preferredVoices = availableVoices.filter(v =>
                 v.lang.includes('en-') &&
-                (v.name.includes('Google') || v.name.includes('Natural'))
+                (v.name.includes('Natural') || v.name.includes('Natural'))
             );
             setVoices(preferredVoices.length ? preferredVoices : availableVoices);
         };
@@ -43,8 +43,36 @@ const MockVisaInterview = () => {
     const synthRef = useRef(null);
     const utteranceRef = useRef(null);
     const conversationEndRef = useRef(null);
+    const [selectedVoice, setSelectedVoice] = useState(null);
     const voices = useVoices();
     const userProfile = useMemo(() => getUserInfo(), []);
+
+    // Set the best available voice when voices are loaded
+    useEffect(() => {
+        if (voices.length > 0 && !selectedVoice) {
+            // Prefer female voices
+            const femaleVoices = voices.filter(v => {
+                const voiceName = v.name.toLowerCase();
+                return voiceName.includes('female') ||
+                    voiceName.includes('woman') ||
+                    voiceName.includes('zira') ||  // Common female voice in Windows
+                    voiceName.includes('samantha') ||  // Common female voice in macOS
+                    voiceName.includes('karen');  // Common female voice in some systems
+            });
+
+            // If no explicitly female voices found, try to find natural-sounding ones
+            const naturalVoices = voices.filter(v =>
+                v.name.toLowerCase().includes('natural')
+            );
+
+            // Use the first available in this order: female voices > natural voices > any voice
+            setSelectedVoice(
+                femaleVoices[0] ||
+                naturalVoices[0] ||
+                voices[0]
+            );
+        }
+    }, [voices, selectedVoice]);
 
     // Initialize speech synthesis and recognition
     useEffect(() => {
@@ -124,10 +152,12 @@ const MockVisaInterview = () => {
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
 
-            // Use a natural-sounding voice if available
-            if (voices.length > 0) {
-                const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Natural')) || voices[0];
-                utterance.voice = preferredVoice;
+            // Use the selected natural voice if available
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            } else if (voices.length > 0) {
+                // Fallback to first available voice
+                utterance.voice = voices[0];
             }
 
             // Set up event handlers
@@ -147,7 +177,7 @@ const MockVisaInterview = () => {
             synthRef.current.speak(utterance);
             setIsSpeaking(true);
         });
-    }, [voices]);
+    }, [selectedVoice, voices]);
 
     // Start a new interview
     const startInterview = async () => {
@@ -241,18 +271,18 @@ const MockVisaInterview = () => {
         return conversation.map((msg, index) => (
             <div
                 key={index}
-                className={`mb-4 flex ${msg.role === 'officer' ? 'justify-start' : 'justify-end'}`}
+                className={`flex ${msg.role === 'officer' ? 'justify-start' : 'justify-end'}`}
             >
                 <div
                     className={`max-w-3/4 rounded-lg px-4 py-2 ${msg.role === 'officer'
-                            ? 'bg-indigo-100 text-indigo-900'
-                            : 'bg-green-100 text-green-900'
+                        ? 'bg-blue-50 text-gray-800 border border-blue-100'
+                        : 'bg-blue-600 text-white'
                         }`}
                 >
-                    <p className="font-medium">
+                    <p className="font-medium text-sm text-blue-700">
                         {msg.role === 'officer' ? 'Visa Officer' : 'You'}
                     </p>
-                    <p>{msg.content}</p>
+                    <p className="mt-1">{msg.content}</p>
                 </div>
             </div>
         ));
@@ -262,88 +292,107 @@ const MockVisaInterview = () => {
         <div className="min-h-screen flex flex-col bg-gray-50">
             <Navbar />
 
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <main className="flex-grow container mx-auto px-4 py-8 mt-16">
                 <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl font-bold text-center mb-8 text-indigo-800">
-                        Mock F1 Visa Interview
-                    </h1>
-
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                        <div className="h-96 overflow-y-auto mb-6 p-4 border rounded-lg bg-gray-50">
-                            {conversation.length === 0 ? (
-                                <p className="text-gray-500 text-center my-8">
-                                    {isLoading ? 'Preparing your interview...' : 'The interview will begin shortly...'}
-                                </p>
-                            ) : (
-                                <>
-                                    {conversationItems}
-                                    {isLoading && (
-                                        <div className="flex justify-start">
-                                            <div className="bg-indigo-100 rounded-lg px-4 py-2 text-indigo-900">
-                                                <div className="flex space-x-2">
-                                                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                            <div ref={conversationEndRef} />
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+                        <div className="p-6 border-b border-gray-100">
+                            <h1 className="text-2xl font-semibold text-gray-800">
+                                Mock F1 Visa Interview
+                            </h1>
+                            <p className="text-gray-600 mt-1">
+                                Practice your visa interview with our AI-powered mock interview
+                            </p>
                         </div>
 
-                        <div className="flex flex-wrap justify-center gap-4">
-                            <button
-                                onClick={toggleListening}
-                                disabled={isLoading || isSpeaking || isInterviewComplete}
-                                className={`flex items-center px-6 py-3 rounded-full text-white font-medium ${isListening
-                                        ? 'bg-red-500 hover:bg-red-600'
-                                        : 'bg-indigo-600 hover:bg-indigo-700'
-                                    } transition-colors disabled:opacity-50 flex-shrink-0`}
-                            >
-                                {isListening ? (
-                                    <>
-                                        <MicOff className="mr-2" size={20} />
-                                        Stop Listening
-                                    </>
+                        <div className="p-6">
+                            <div className="h-96 overflow-y-auto mb-6 p-4 border border-gray-200 rounded-lg bg-white">
+                                {conversation.length === 0 ? (
+                                    <div className="h-full flex items-center justify-center">
+                                        <p className="text-gray-500 text-center">
+                                            {isLoading ? (
+                                                <span className="flex items-center">
+                                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Preparing your interview...
+                                                </span>
+                                            ) : 'Click the microphone button to start speaking'}
+                                        </p>
+                                    </div>
                                 ) : (
-                                    <>
-                                        <Mic className="mr-2" size={20} />
-                                        {isSpeaking ? 'Wait...' : 'Speak Your Answer'}
-                                    </>
+                                    <div className="space-y-4">
+                                        {conversationItems}
+                                        {isLoading && (
+                                            <div className="flex justify-start">
+                                                <div className="bg-blue-50 rounded-lg px-4 py-2 border border-blue-100">
+                                                    <div className="flex space-x-2">
+                                                        <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                                        <div className="w-2 h-2 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
-                            </button>
+                                <div ref={conversationEndRef} />
+                            </div>
 
-                            <button
-                                onClick={replayLastMessage}
-                                disabled={conversation.length === 0 || isSpeaking || isInterviewComplete}
-                                className="flex items-center px-6 py-3 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-800 font-medium transition-colors disabled:opacity-50 flex-shrink-0"
-                            >
-                                <Volume2 className="mr-2" size={20} />
-                                Replay
-                            </button>
+                            <div className="flex flex-wrap justify-center gap-3">
+                                <button
+                                    onClick={toggleListening}
+                                    disabled={isLoading || isSpeaking || isInterviewComplete}
+                                    className={`flex items-center px-5 py-2.5 rounded-lg font-medium text-sm transition-colors ${isListening
+                                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                    {isListening ? (
+                                        <>
+                                            <MicOff className="mr-2" size={18} />
+                                            Stop Listening
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Mic className="mr-2" size={18} />
+                                            {isSpeaking ? 'Please wait...' : 'Speak Your Answer'}
+                                        </>
+                                    )}
+                                </button>
 
-                            <button
-                                onClick={startInterview}
-                                className="flex items-center px-6 py-3 bg-amber-500 hover:bg-amber-600 rounded-full text-white font-medium transition-colors flex-shrink-0"
-                            >
-                                <RotateCcw className="mr-2" size={20} />
-                                Restart
-                            </button>
+                                <button
+                                    onClick={replayLastMessage}
+                                    disabled={conversation.length === 0 || isSpeaking || isInterviewComplete}
+                                    className="flex items-center px-5 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Volume2 className="mr-2" size={18} />
+                                    Replay
+                                </button>
+
+                                <button
+                                    onClick={startInterview}
+                                    className="flex items-center px-5 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium text-sm transition-colors"
+                                >
+                                    <RotateCcw className="mr-2" size={18} />
+                                    Restart
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {isInterviewComplete && feedback && (
-                        <div className="bg-white rounded-lg shadow-md p-6 mb-8 border-l-4 border-indigo-500">
-                            <h3 className="text-xl font-semibold mb-4 text-indigo-800 flex items-center">
-                                <CheckCircle className="mr-2 text-green-500" />
-                                Interview Complete - Your Feedback
-                            </h3>
-                            <div className="prose max-w-none" dangerouslySetInnerHTML={{
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                            <div className="flex items-center mb-4">
+                                <CheckCircle className="text-green-500 mr-2" size={20} />
+                                <h3 className="text-lg font-semibold text-gray-800">
+                                    Interview Complete - Your Feedback
+                                </h3>
+                            </div>
+                            <div className="prose max-w-none text-gray-700 mb-6" dangerouslySetInnerHTML={{
                                 __html: feedback.replace(/\n/g, '<br>').replace(/•/g, '• ')
                             }} />
-                            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                                 <h4 className="font-medium text-blue-800 mb-2 flex items-center">
                                     <AlertCircle className="mr-2" size={18} />
                                     Tips for Your Real Interview

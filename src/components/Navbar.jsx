@@ -50,6 +50,7 @@ const Navbar = () => {
     { name: 'Programs', path: '/programs', icon: <BookOpen size={18} className="mr-2" /> },
     { name: 'About Us', path: '/about', icon: <Info size={18} className="mr-2" /> },
     { name: 'Contact Us', path: '/contact', icon: <Mail size={18} className="mr-2" /> },
+    { name: 'Mock Interview', path: '/mock-visa-interview', icon: <User size={18} className="mr-2" /> }
   ];
 
   const userMenuItems = [
