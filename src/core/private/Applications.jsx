@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, FileText, Loader2, Calendar, BookOpen, Building2, Clock, Search, X, Award } from 'lucide-react';
+import { Edit, FileText, Loader2, Calendar, BookOpen, Building2, Clock, Search, X, Award, Download } from 'lucide-react';
 import { getUserApplications, cancelApplication } from '../../utils/applicationHelper';
 import { getUserScholarshipApplications } from '../../utils/scholarshipHelper';
 import { toast } from 'react-toastify';
@@ -223,23 +223,51 @@ const Applications = () => {
                                                     </p>
                                                 </div>
                                                 <div className="flex space-x-2">
-                                                    {application.status !== 'cancelled' && application.status !== 'rejected' && (
-                                                        <button
-                                                            onClick={() => handleCancelApplication(application._id)}
-                                                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                            disabled={application.status === 'cancelled'}
-                                                        >
-                                                            <X className="h-4 w-4 mr-1.5" />
-                                                            Cancel
-                                                        </button>
+                                                    {!application.acceptanceLetter && !application.rejectionLetter && (
+                                                        <>
+                                                            {application.status !== 'cancelled' && application.status !== 'rejected' && (
+                                                                <button
+                                                                    onClick={() => handleCancelApplication(application._id)}
+                                                                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                                    disabled={application.status === 'cancelled'}
+                                                                >
+                                                                    <X className="h-4 w-4 mr-1.5" />
+                                                                    Cancel
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleUpdateSOP(application)}
+                                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                            >
+                                                                <Edit className="h-4 w-4 mr-1.5" />
+                                                                Update SOP
+                                                            </button>
+                                                        </>
                                                     )}
-                                                    <button
-                                                        onClick={() => handleUpdateSOP(application)}
-                                                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                                    >
-                                                        <Edit className="h-4 w-4 mr-1.5" />
-                                                        Update SOP
-                                                    </button>
+                                                    {application.acceptanceLetter && (
+                                                        <a
+                                                            href={`http://localhost:3000/api/files/letters/${application.acceptanceLetter.split('/').pop()}`}
+                                                            download={`acceptance_letter_${application.course.university.university_name.replace(/\s+/g, '_')}.pdf`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                                        >
+                                                            <Download className="h-4 w-4 mr-1.5" />
+                                                            Download Acceptance Letter
+                                                        </a>
+                                                    )}
+                                                    {application.rejectionLetter && (
+                                                        <a
+                                                            href={`http://localhost:3000/api/files/letters/${application.rejectionLetter.split('/').pop()}`}
+                                                            download={`rejection_letter_${application.course.university.university_name.replace(/\s+/g, '_')}.pdf`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                        >
+                                                            <Download className="h-4 w-4 mr-1.5" />
+                                                            Download Rejection Letter
+                                                        </a>
+                                                    )}
                                                 </div>
                                             </div>
 

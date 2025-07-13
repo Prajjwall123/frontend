@@ -9,6 +9,7 @@ import VoiceChatBot from '../../components/VoiceChatBot';
 import Typewriter from '../../components/Typewriter';
 import Chatbot from '../../components/Chatbot';
 import './SOPWriter.css';
+import { updateApplicationSOP } from '../../utils/applicationHelper';
 
 const SOPWriter = () => {
     const [content, setContent] = useState('');
@@ -77,8 +78,14 @@ const SOPWriter = () => {
 
         if (isConfirmed) {
             try {
-                // Handle SOP submission
-                console.log('SOP submitted:', content);
+                // Get application ID from location state
+                const applicationId = location.state?.applicationId;
+                if (!applicationId) {
+                    throw new Error('No application ID found');
+                }
+
+                // Update SOP in the backend
+                await updateApplicationSOP(applicationId, content);
 
                 // Show success toast
                 toast.success('SOP updated successfully!', {
@@ -91,11 +98,13 @@ const SOPWriter = () => {
                     progress: undefined,
                 });
 
-                // Optional: Navigate back or perform other actions after submission
-                // navigate('/applications');
+                // Navigate back to applications page after a short delay
+                setTimeout(() => {
+                    navigate('/my-applications');
+                }, 1500);
             } catch (error) {
                 console.error('Error submitting SOP:', error);
-                toast.error('Failed to update SOP. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to update SOP. Please try again.');
             }
         }
     };

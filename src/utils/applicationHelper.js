@@ -65,3 +65,28 @@ export const cancelApplication = async (applicationId) => {
         throw error;
     }
 };
+
+/**
+ * Update the SOP for an application
+ * @param {string} applicationId - The ID of the application to update
+ * @param {string} sop - The new Statement of Purpose content
+ * @returns {Promise<Object>} The updated application data
+ */
+export const updateApplicationSOP = async (applicationId, sop) => {
+    try {
+        const user = getUserInfo();
+        if (!user || !user._id) {
+            throw new Error('User not authenticated');
+        }
+
+        const response = await API.patch(`/applications/${applicationId}/sop`, {
+            sop,
+            userId: user._id
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error updating application SOP:', error);
+        throw error;
+    }
+};
