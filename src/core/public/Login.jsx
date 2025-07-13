@@ -102,22 +102,24 @@ const Login = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-2.5 text-gray-600"
-                                    tabIndex={-1}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
                                 >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <Link to="#" className="text-sm text-black hover:underline">
+                        <div className="flex justify-end">
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            >
                                 Forgot Password?
                             </Link>
                         </div>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-black text-white py-2 rounded font-semibold hover:bg-gray-900 transition"
+                            className="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition duration-200 disabled:opacity-50"
                         >
                             {loading ? "Signing in..." : "Sign in"}
                         </button>

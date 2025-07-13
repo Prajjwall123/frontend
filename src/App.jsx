@@ -11,6 +11,8 @@ const Home = lazy(() => import("./core/public/Home"));
 const Login = lazy(() => import("./core/public/Login"));
 const Register = lazy(() => import("./core/public/Register"));
 const VerifyOtp = lazy(() => import("./core/public/VerifyOtp"));
+const ForgotPassword = lazy(() => import("./core/public/ForgotPassword"));
+const ResetPassword = lazy(() => import("./core/public/ResetPassword"));
 const Dashboard = lazy(() => import("./core/public/Dashboard"));
 const CourseDetail = lazy(() => import("./core/public/CourseDetail"));
 const Universities = lazy(() => import("./core/public/Universities"));
@@ -27,12 +29,13 @@ const CostOfLivingCalculator = lazy(() => import("./core/public/CostOfLivingCalc
 function App() {
   const [count, setCount] = useState(0)
 
-
   const publicRoutes = [
     { path: "/", element: <Suspense fallback={<div>Loading...</div>}><Dashboard /></Suspense> },
     { path: "/login", element: <Suspense fallback={<div>Loading...</div>}><Login /></Suspense> },
     { path: "/register", element: <Suspense fallback={<div>Loading...</div>}><Register /></Suspense> },
     { path: "/verify-otp", element: <Suspense fallback={<div>Loading...</div>}><VerifyOtp /></Suspense> },
+    { path: "/forgot-password", element: <Suspense fallback={<div>Loading...</div>}><ForgotPassword /></Suspense> },
+    { path: "/reset-password", element: <Suspense fallback={<div>Loading...</div>}><ResetPassword /></Suspense> },
     { path: "/dashboard", element: <Suspense fallback={<div>Loading...</div>}><Dashboard /></Suspense> },
     { path: "/universities", element: <Suspense fallback={<div>Loading...</div>}><Universities /></Suspense> },
     { path: "/university/:id", element: <Suspense fallback={<div>Loading...</div>}><UniversityDetailDynamic /></Suspense> },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import whiteLogo from "../assets/white_logo.png";
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
@@ -40,11 +41,12 @@ const Footer = () => {
                     <div>
                         <h3 className="text-white font-semibold mb-4">Quick Links</h3>
                         <ul className="space-y-2 text-sm">
-                            <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
-                            <li><a href="#" className="hover:text-white transition-colors">Universities</a></li>
-                            <li><a href="#" className="hover:text-white transition-colors">Programs</a></li>
-                            <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                            <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                            <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
+                            <li><Link to="/universities" className="hover:text-white transition-colors">Universities</Link></li>
+                            <li><Link to="/programs" className="hover:text-white transition-colors">Programs</Link></li>
+                            <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+                            <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                            <li><Link to="/cost-of-living-calculator" className="hover:text-white transition-colors">Cost of Living Calculator</Link></li>
                         </ul>
                     </div>
 
@@ -70,7 +72,7 @@ const Footer = () => {
 
                 {/* Copyright */}
                 <div className="border-t border-gray-800 mt-12 pt-6 text-center text-sm text-gray-500">
-                    <p>© {new Date().getFullYear()} Gradly. All rights reserved.</p>
+                    <p> {new Date().getFullYear()} Gradly. All rights reserved.</p>
                 </div>
             </div>
         </footer>
