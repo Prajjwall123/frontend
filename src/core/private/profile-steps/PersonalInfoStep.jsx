@@ -3,6 +3,7 @@ import { User, Mail, Calendar, MapPin, Home } from 'lucide-react';
 
 const PersonalInfoStep = ({ formData, handleChange }) => {
     const [showEmailError, setShowEmailError] = React.useState(false);
+    const [dateError, setDateError] = React.useState('');
 
     const handleEmailFocus = (e) => {
         e.preventDefault();
@@ -14,6 +15,23 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
             pauseOnHover: true,
             draggable: true,
         });
+    };
+
+    const handleDateChange = (e) => {
+        const selectedDate = new Date(e.target.value);
+        const today = new Date();
+        const minAgeDate = new Date(
+            today.getFullYear() - 18,
+            today.getMonth(),
+            today.getDate()
+        );
+
+        if (selectedDate > minAgeDate) {
+            setDateError('You must be at least 18 years old');
+        } else {
+            setDateError('');
+            handleChange(e);
+        }
     };
 
     return (
@@ -81,11 +99,15 @@ const PersonalInfoStep = ({ formData, handleChange }) => {
                                 type="date"
                                 name="date_of_birth"
                                 value={formData.date_of_birth || ''}
-                                onChange={handleChange}
-                                className="block w-full pl-8 pr-3 py-2 text-xs text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                onChange={handleDateChange}
+                                className={`block w-full pl-8 pr-3 py-2 text-xs text-gray-700 border ${dateError ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent`}
+                                max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                                 required
                             />
                         </div>
+                        {dateError && (
+                            <p className="mt-1 text-xs text-red-600">{dateError}</p>
+                        )}
                     </div>
 
                     {/* Gender */}

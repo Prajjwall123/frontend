@@ -4,6 +4,7 @@ import { Globe, Calendar, FileText, ChevronDown } from 'lucide-react';
 
 const VisaStep = ({ formData, handleChange }) => {
     const [showPreviousVisa, setShowPreviousVisa] = useState(formData.previous_visa_application || false);
+    const [yearError, setYearError] = useState('');
 
     const countries = [
         'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
@@ -18,6 +19,19 @@ const VisaStep = ({ formData, handleChange }) => {
     const visaStatuses = [
         'Approved', 'Rejected', 'Expired', 'Cancelled', 'In Progress'
     ];
+
+    const handleYearChange = (e) => {
+        const year = parseInt(e.target.value, 10);
+        const currentYear = new Date().getFullYear();
+
+        if (year >= currentYear) {
+            setYearError('Must be a past year (before ' + currentYear + ')');
+            return;
+        }
+
+        setYearError('');
+        handleChange(e);
+    };
 
     // Update showPreviousVisa when formData changes
     useEffect(() => {
@@ -89,14 +103,18 @@ const VisaStep = ({ formData, handleChange }) => {
                                             type="number"
                                             name="application_year"
                                             value={formData?.application_year || ''}
-                                            onChange={handleChange}
-                                            min="2000"
-                                            max={new Date().getFullYear() + 1}
-                                            className="block w-full px-3 py-2.5 text-sm border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="2023"
+                                            onChange={handleYearChange}
+                                            max={new Date().getFullYear() - 1}
+                                            className={`block w-full px-3 py-2.5 text-sm border ${yearError ? 'border-red-500' : 'border-gray-300'} rounded-md text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent`}
+                                            placeholder={new Date().getFullYear().toString()}
                                             required
                                         />
                                     </div>
+                                    {yearError ? (
+                                        <p className="mt-1 text-xs text-red-600">{yearError}</p>
+                                    ) : (
+                                        <p className="mt-1 text-xs text-gray-500">Must be a past year (before {new Date().getFullYear()})</p>
+                                    )}
                                 </div>
 
                                 {/* Application Date */}

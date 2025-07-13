@@ -1,11 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { registerUser } from "../../utils/authHelper";
 import logo from "../../assets/logo.png";
 import register from "../../assets/register.png";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check, X } from "lucide-react";
 import { motion } from "framer-motion";
+
+const passwordRequirements = [
+    { id: 'length', text: 'At least 8 characters', regex: /.{8,}/ },
+    { id: 'uppercase', text: 'At least one uppercase letter', regex: /[A-Z]/ },
+    { id: 'number', text: 'At least one number', regex: /[0-9]/ },
+    { id: 'special', text: 'At least one special character', regex: /[!@#$%^&*(),.?":{}|<>]/ },
+];
+
+const getPasswordStrength = (password) => {
+    if (!password) return 0;
+
+    let strength = 0;
+    const requirements = [
+        /.{8,}/,      // min length
+        /[A-Z]/,      // uppercase
+        /[0-9]/,      // number
+        /[^A-Za-z0-9]/ // special char
+    ];
+
+    // Check each requirement
+    requirements.forEach(req => {
+        if (req.test(password)) strength += 25;
+    });
+
+    return strength;
+};
+
+const getStrengthColor = (strength) => {
+    if (strength <= 25) return 'bg-red-500';
+    if (strength <= 50) return 'bg-yellow-500';
+    if (strength <= 75) return 'bg-blue-500';
+    return 'bg-green-500';
+};
 
 const Register = () => {
     const navigate = useNavigate();
@@ -15,21 +48,60 @@ const Register = () => {
         password: "",
         confirmPassword: "",
     });
-    const [loading, setLoading] = useState(false);
+    const [passwordFocused, setPasswordFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordStrength, setPasswordStrength] = useState(0);
+    const [passwordChecks, setPasswordChecks] = useState(
+        passwordRequirements.reduce((acc, req) => ({
+            ...acc,
+            [req.id]: false
+        }), {})
+    );
+    const [loading, setLoading] = useState(false);
+
+    const validatePassword = (password) => {
+        const checks = {};
+        passwordRequirements.forEach(req => {
+            checks[req.id] = req.regex.test(password);
+        });
+        setPasswordChecks(checks);
+        setPasswordStrength(getPasswordStrength(password));
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        setForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        if (name === 'password') {
+            validatePassword(value);
+        }
+    };
+
+    const validateForm = () => {
+        // Check if all password requirements are met
+        const allChecksPassed = Object.values(passwordChecks).every(Boolean);
+
+        if (form.password !== form.confirmPassword) {
+            toast.error("Passwords do not match");
+            return false;
+        }
+
+        if (!allChecksPassed) {
+            toast.error("Please ensure your password meets all requirements");
+            return false;
+        }
+
+        return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (form.password !== form.confirmPassword) {
-            toast.error("Passwords do not match");
-            return;
-        }
+        if (!validateForm()) return;
+
         setLoading(true);
         try {
             await registerUser({
@@ -97,7 +169,9 @@ const Register = () => {
                             />
                         </div>
                         <div>
-                            <label className="block mb-1 font-medium" htmlFor="password">Password</label>
+                            <label className="block mb-1 font-medium" htmlFor="password">
+                                Password
+                            </label>
                             <div className="relative">
                                 <input
                                     id="password"
@@ -106,21 +180,58 @@ const Register = () => {
                                     required
                                     value={form.password}
                                     onChange={handleChange}
+                                    onFocus={() => setPasswordFocused(true)}
+                                    onBlur={() => setPasswordFocused(false)}
                                     className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black pr-10"
-                                    autoComplete="new-password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-2.5 text-gray-600"
-                                    tabIndex={-1}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                                 >
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+
+                            {/* Password Strength Meter */}
+                            {form.password && (
+                                <div className="mt-2">
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div
+                                            className={`h-2 rounded-full ${getStrengthColor(passwordStrength)}`}
+                                            style={{ width: `${passwordStrength}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-xs mt-1 text-gray-500">
+                                        Password Strength: {passwordStrength < 50 ? 'Weak' : passwordStrength < 75 ? 'Good' : 'Strong'}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Password Requirements */}
+                            {(passwordFocused || form.password) && (
+                                <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                                    <p className="font-medium mb-2">Password must contain:</p>
+                                    <ul className="space-y-1">
+                                        {passwordRequirements.map(req => (
+                                            <li key={req.id} className={`flex items-center ${passwordChecks[req.id] ? 'text-green-600' : 'text-gray-500'}`}>
+                                                {passwordChecks[req.id] ? (
+                                                    <Check size={16} className="mr-2" />
+                                                ) : (
+                                                    <X size={16} className="mr-2" />
+                                                )}
+                                                {req.text}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
+
                         <div>
-                            <label className="block mb-1 font-medium" htmlFor="confirmPassword">Confirm Password</label>
+                            <label className="block mb-1 font-medium" htmlFor="confirmPassword">
+                                Confirm Password
+                            </label>
                             <div className="relative">
                                 <input
                                     id="confirmPassword"
@@ -130,32 +241,37 @@ const Register = () => {
                                     value={form.confirmPassword}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black pr-10"
-                                    autoComplete="new-password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-2.5 text-gray-600"
-                                    tabIndex={-1}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                                 >
                                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+                            {form.password && form.confirmPassword && form.password !== form.confirmPassword && (
+                                <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+                            )}
                         </div>
+
                         <button
                             type="submit"
                             disabled={loading}
                             className="w-full bg-black text-white py-2 rounded font-semibold hover:bg-gray-900 transition"
                         >
-                            {loading ? "Signing up..." : "Sign Up"}
+                            {loading ? 'Creating Account...' : 'Create Account'}
                         </button>
                     </form>
-                    <p className="mt-6 text-center text-sm">
-                        Already Have an account?{' '}
-                        <Link to="/login" className="font-semibold underline">
-                            Sign In
-                        </Link>
-                    </p>
+
+                    <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600">
+                            Already have an account?{' '}
+                            <Link to="/login" className="text-black font-medium hover:underline">
+                                Sign in
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </motion.div>
         </div>

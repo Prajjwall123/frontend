@@ -16,6 +16,7 @@ const EnglishTestStep = ({ formData, handleChange, setFormData }) => {
             ? formData.english_test.exam_date.split('T')[0]
             : ''
     );
+    const [dateError, setDateError] = useState('');
 
     const testTypes = [
         { id: 'ielts', name: 'IELTS' },
@@ -97,18 +98,38 @@ const EnglishTestStep = ({ formData, handleChange, setFormData }) => {
     };
 
     const handleExamDateChange = (e) => {
-        const value = e.target.value;
-        setExamDate(value);
+        const selectedDate = e.target.value;
+        setExamDate(selectedDate);
 
-        // Only send the date if it has a value, otherwise send null
-        const dateValue = value ? new Date(value).toISOString() : null;
+        if (!selectedDate) {
+            setDateError('');
+            return;
+        }
+
+        const today = new Date();
+        const twoYearsAgo = new Date();
+        twoYearsAgo.setFullYear(today.getFullYear() - 2);
+
+        const selectedDateObj = new Date(selectedDate);
+
+        if (selectedDateObj > today) {
+            setDateError('Exam date cannot be in the future');
+            return;
+        }
+
+        if (selectedDateObj < twoYearsAgo) {
+            setDateError('Exam date cannot be more than 2 years ago');
+            return;
+        }
+
+        setDateError('');
 
         // Update the form data
         setFormData(prev => ({
             ...prev,
             english_test: {
                 ...prev.english_test,
-                exam_date: dateValue
+                exam_date: selectedDateObj.toISOString()
             }
         }));
     };
@@ -192,9 +213,17 @@ const EnglishTestStep = ({ formData, handleChange, setFormData }) => {
                                 name="exam_date"
                                 value={examDate || ''}
                                 onChange={handleExamDateChange}
-                                className="block w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                max={new Date().toISOString().split('T')[0]}
+                                className={`block w-full pl-10 pr-3 py-2 text-sm border ${dateError ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent`}
                             />
                         </div>
+                        {dateError ? (
+                            <p className="mt-1 text-xs text-red-600">{dateError}</p>
+                        ) : (
+                            <p className="mt-1 text-xs text-gray-500">
+                                Must be within the last 2 years and not in the future
+                            </p>
+                        )}
                     </div>
 
                     {/* Test Scores */}
