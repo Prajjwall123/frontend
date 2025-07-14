@@ -248,7 +248,7 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm`}
             >
-              {currentStep === steps.length - 1 ? 'Create Application' : 'Next'}
+              {currentStep === steps.length - 1 ? 'Make Payment' : 'Next'}
             </button>
             {currentStep > 0 && (
               <button
