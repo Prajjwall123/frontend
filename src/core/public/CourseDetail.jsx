@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Cloc
 import { getCourseById } from '../../utils/coursesHelper';
 import { getScholarshipsByUniversityId, applyForScholarship } from '../../utils/scholarshipHelper';
 import { isAuthenticated, getUserInfo } from '../../utils/authHelper';
-import { initiatePayment } from '../../utils/paymentHelper';
+import { createApplicationAndInitiatePayment } from '../../utils/paymentHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Chatbot from '../../components/Chatbot';
@@ -74,30 +74,21 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
       localStorage.setItem('application_course_id', course._id);
       localStorage.setItem('application_intake', selectedIntake);
 
-      // Initiate payment
-      const paymentResponse = await initiatePayment(1000);
+      // Create application and initiate payment
+      const paymentResponse = await createApplicationAndInitiatePayment(1000, course._id, selectedIntake);
 
-      // Handle the payment response
       if (paymentResponse.success) {
-        // Open payment URL in a new tab
-        const newWindow = window.open(paymentResponse.payment_url, '_blank');
-        if (newWindow) {
-          // Focus the new window
-          newWindow.focus();
-          // Close the modal
-          onClose();
-          // Show success message
-          toast.success('Payment window opened in a new tab');
-        } else {
-          // If window.open failed (blocked by popup blocker)
-          throw new Error('Payment window was blocked by popup blocker. Please allow popups for this site.');
-        }
+        // Close the modal
+        onClose();
+
+        // Redirect to payment URL in same tab
+        window.location.href = paymentResponse.data.payment_url;
       } else {
-        throw new Error(paymentResponse.message || 'Failed to initiate payment');
+        throw new Error(paymentResponse.message || 'Failed to create application and initiate payment');
       }
     } catch (error) {
       console.error('Payment error:', error);
-      setPaymentError(error.message || 'Failed to initiate payment');
+      setPaymentError(error.message || 'Failed to create application and initiate payment');
       toast.error(paymentError);
       // Clean up localStorage on error
       localStorage.removeItem('application_course_id');
@@ -443,7 +434,7 @@ const CourseDetail = () => {
   // Handle application submission
   const handleApplicationSubmit = async (applicationData) => {
     try {
-      const result = await createApplication(course._id, applicationData.intake);
+      const result = await createApplicationAndInitiatePayment(1000, course._id, applicationData.intake);
       console.log('Application created:', result);
 
       toast.success('Application created successfully!', {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
@@ -12,37 +12,12 @@ const PaymentCallback = () => {
     useEffect(() => {
         const handlePayment = async () => {
             try {
-                // Get application ID from localStorage
-                const applicationId = localStorage.getItem('application_id');
-
-                if (!applicationId) {
-                    throw new Error('Application data not found');
-                }
-
-                // Update application status
-                const response = await fetch('http://localhost:3000/api/applications/update-status', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        applicationId,
-                        status: 'paid'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update application status');
-                }
-
                 // Show success message and redirect
                 toast.success('Payment processed successfully!');
                 setTimeout(() => {
                     // Clean up localStorage
                     localStorage.removeItem('application_course_id');
                     localStorage.removeItem('application_intake');
-                    localStorage.removeItem('application_id');
 
                     // Redirect to applications page
                     navigate('/my-applications');
@@ -80,7 +55,6 @@ const PaymentCallback = () => {
                             // Clean up localStorage on error
                             localStorage.removeItem('application_course_id');
                             localStorage.removeItem('application_intake');
-                            localStorage.removeItem('application_id');
                             navigate('/dashboard');
                         }}
                         className="mt-6 px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
