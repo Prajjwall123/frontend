@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Save, ExternalLink, MessageSquare } from 'lucide-react';
+import { Save, ExternalLink, MessageSquare, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,6 +21,7 @@ const SOPWriter = () => {
         courseId: 'cs101',
         university_photo: null
     });
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const textareaRef = useRef(null);
     const editorRef = useRef(null);
     const navigate = useNavigate();
@@ -74,39 +75,47 @@ const SOPWriter = () => {
     };
 
     const handleSubmit = async () => {
-        const isConfirmed = window.confirm('Are you sure you want to submit this SOP?');
+        setShowConfirmModal(true);
+    };
 
-        if (isConfirmed) {
-            try {
-                // Get application ID from location state
-                const applicationId = location.state?.applicationId;
-                if (!applicationId) {
-                    throw new Error('No application ID found');
-                }
-
-                // Update SOP in the backend
-                await updateApplicationSOP(applicationId, content);
-
-                // Show success toast
-                toast.success('SOP updated successfully!', {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-
-                // Navigate back to applications page after a short delay
-                setTimeout(() => {
-                    navigate('/my-applications');
-                }, 1500);
-            } catch (error) {
-                console.error('Error submitting SOP:', error);
-                toast.error(error.response?.data?.message || 'Failed to update SOP. Please try again.');
+    const handleConfirmSubmit = async () => {
+        try {
+            // Get application ID from location state
+            const applicationId = location.state?.applicationId;
+            if (!applicationId) {
+                throw new Error('No application ID found');
             }
+
+            // Update SOP in the backend
+            await updateApplicationSOP(applicationId, content);
+
+            // Show success toast
+            toast.success('SOP updated successfully!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+
+            // Close the modal
+            setShowConfirmModal(false);
+
+            // Navigate back to applications page after a short delay
+            setTimeout(() => {
+                navigate('/my-applications');
+            }, 1500);
+        } catch (error) {
+            console.error('Error submitting SOP:', error);
+            toast.error(error.response?.data?.message || 'Failed to update SOP. Please try again.');
+            setShowConfirmModal(false);
         }
+    };
+
+    const handleCancelSubmit = () => {
+        setShowConfirmModal(false);
     };
 
     // Handle messages from the chatbot
@@ -262,6 +271,40 @@ const SOPWriter = () => {
             </div>
             <Chatbot />
             <Footer />
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900">Confirm Submission</h3>
+                            <button
+                                onClick={handleCancelSubmit}
+                                className="text-gray-400 hover:text-gray-500"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="mb-6">
+                            <p className="text-gray-600">Are you sure you want to submit this SOP? This action cannot be undone.</p>
+                        </div>
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                onClick={handleCancelSubmit}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmSubmit}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

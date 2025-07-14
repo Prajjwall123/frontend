@@ -152,7 +152,8 @@ const EducationStep = ({ formData, handleChange, setFormData }) => {
                             value={formData.final_grade || ''}
                             onChange={handleChange}
                             className="appearance-none block w-full pl-3 pr-8 py-2.5 text-sm border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                            required
+                            required={!formData.currently_enrolled}
+                            disabled={formData.currently_enrolled}
                         >
                             <option value="">Select final grade</option>
                             <option value="A+">A+</option>

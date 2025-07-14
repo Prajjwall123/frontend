@@ -519,10 +519,10 @@ const CourseDetail = () => {
       <Navbar className="fixed top-0 w-full z-50" />
       <Chatbot />
       {/* Main Content */}
-      <div className="pt-16 flex-1">
-        {/* Course Header */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="container mx-auto px-4 py-6">
+      <div className="flex-1 pt-26">
+        <div className="container mx-auto px-4">
+          {/* Course Header */}
+          <div className="bg-white border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center">
                 {course.university?.photo && (
@@ -553,215 +553,215 @@ const CourseDetail = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Course Details */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Left Column */}
-            <div className="lg:w-2/3">
-              {/* About Course */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">About this course</h2>
-                <div className="prose max-w-none text-gray-600">
-                  <p>{course.about || 'N/A'}</p>
-                </div>
-              </div>
-
-              {/* Entry Requirements */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Entry Requirements</h2>
-                <ul className="space-y-3">
-                  {course.entry_requirements?.length > 0 ? (
-                    course.entry_requirements.map((req, index) => (
-                      <li key={index} className="flex items-start">
-                        <Check size={16} className="text-green-500 mr-2 mt-1 flex-shrink-0" />
-                        <span className="text-gray-600">{req}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-gray-500">No entry requirements available</li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Modules */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Course Modules</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {course.modules?.length > 0 ? (
-                    course.modules.map((module, index) => (
-                      <div key={index} className="flex items-start p-3 bg-gray-50 rounded-lg">
-                        <BookOpen size={16} className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                        <span className="text-gray-700">{module}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500">No module information available</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="lg:w-1/3 space-y-6">
-              {/* Scholarships */}
-              {scholarships.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Available Scholarships</h3>
-                  <div className="space-y-4">
-                    {scholarships.map((scholarship) => (
-                      <div key={scholarship._id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium text-gray-900">{scholarship.scholarship_name}</h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {scholarship.amount_per_year
-                                ? `AUD $${scholarship.amount_per_year.toLocaleString()} per year`
-                                : 'Amount varies'}
-                            </p>
-                            {scholarship.terms_and_conditions && (
-                              <p className="text-xs text-gray-500 mt-2">
-                                <span className="font-medium">Requirements:</span> {scholarship.terms_and_conditions}
-                              </p>
-                            )}
-                          </div>
-                          {appliedScholarships.includes(scholarship._id) ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Applied
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleScholarshipApply(scholarship)}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              Apply Now
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+          {/* Course Details */}
+          <div className="py-8">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Left Column */}
+              <div className="lg:w-2/3">
+                {/* About Course */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">About this course</h2>
+                  <div className="prose max-w-none text-gray-600">
+                    <p>{course.about || 'N/A'}</p>
                   </div>
                 </div>
-              )}
 
-              {/* Quick Facts */}
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="bg-gray-800 p-4">
-                  <h3 className="text-lg font-semibold text-white">Course Details</h3>
-                </div>
-                <div className="p-5 space-y-4">
-                  <div className="flex items-start">
-                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
-                      <GraduationCap size={16} className="text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Level</p>
-                      <p className="text-gray-900 font-medium capitalize">{course.course_level || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
-                      <Clock size={16} className="text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Duration</p>
-                      <p className="text-gray-900 font-medium">{course.course_duration || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
-                      <Calendar size={16} className="text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Intake</p>
-                      <p className="text-gray-900 font-medium">
-                        {Array.isArray(course.intake) && course.intake.length > 0
-                          ? course.intake.join(', ')
-                          : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="bg-gray-100 p-2 rounded-lg mr-3">
-                      <CreditCard size={16} className="text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Tuition Fee</p>
-                      <p className="text-gray-900 font-medium">{formatCurrency(course.course_tuition)} per year</p>
-                      <p className="text-xs text-gray-500">
-                        {course.application_fee ? `Application fee: ${formatCurrency(course.application_fee)}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* University Info */}
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-3">Offered by</h3>
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-3 overflow-hidden">
-                    {course.university?.photo ? (
-                      <img
-                        src={`http://localhost:3000${course.university.photo}`}
-                        alt={`${course.university.name} logo`}
-                        className="w-8 h-8 object-contain"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2QjcyN0UiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1ncmFkdWF0aW9uLWNhcCI+PHBhdGggZD0ibTggMTQgMiAyIDQtNCIvPjxwYXRoIGQ9Ik0yMiAxMGMwIDYtNCAxMC0xMCAxMFMyIDIxLjMgMiAxMy44VjVhMiAyIDAgMCAxIDItMmg0Ii8+PHBhdGggZD0i0xNCAyYzAgNCAyLjUgOCA0LjUgMTAgMS4zLTEuMyAyLTMuNyAyLTYiLz48cGF0aCBkPSJNMTguMjIgMTIuMjNhMyAxIDAgMSAwIC0uMjItMS45OSIvPjwvc3ZnPg==';
-                        }}
-                      />
+                {/* Entry Requirements */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Entry Requirements</h2>
+                  <ul className="space-y-3">
+                    {course.entry_requirements?.length > 0 ? (
+                      course.entry_requirements.map((req, index) => (
+                        <li key={index} className="flex items-start">
+                          <Check size={16} className="text-green-500 mr-2 mt-1 flex-shrink-0" />
+                          <span className="text-gray-600">{req}</span>
+                        </li>
+                      ))
                     ) : (
-                      <GraduationCap size={20} className="text-gray-400" />
+                      <li className="text-gray-500">No entry requirements available</li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Modules */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Course Modules</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {course.modules?.length > 0 ? (
+                      course.modules.map((module, index) => (
+                        <div key={index} className="flex items-start p-3 bg-gray-50 rounded-lg">
+                          <BookOpen size={16} className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <span className="text-gray-700">{module}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No module information available</p>
                     )}
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{course.university?.name || 'N/A'}</p>
-                    <p className="text-sm text-gray-600">{course.university?.location || 'N/A'}</p>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (course.university?._id) {
-                          window.open(`/university/${course.university._id}`, '_blank', 'noopener,noreferrer');
-                        } else {
-                          // toast.error('University information not available');
-                        }
-                      }}
-                      className="text-blue-600 hover:text-blue-800 hover:underline text-sm mt-1 inline-flex items-center transition-colors"
-                      aria-label={`View ${course.university?.name || 'university'} details`}
-                    >
-                      View university <ExternalLink size={14} className="ml-1" />
-                    </button>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="lg:w-1/3 space-y-6">
+                {/* Scholarships */}
+                {scholarships.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Available Scholarships</h3>
+                    <div className="space-y-4">
+                      {scholarships.map((scholarship) => (
+                        <div key={scholarship._id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{scholarship.scholarship_name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {scholarship.amount_per_year
+                                  ? `AUD $${scholarship.amount_per_year.toLocaleString()} per year`
+                                  : 'Amount varies'}
+                              </p>
+                              {scholarship.terms_and_conditions && (
+                                <p className="text-xs text-gray-500 mt-2">
+                                  <span className="font-medium">Requirements:</span> {scholarship.terms_and_conditions}
+                                </p>
+                              )}
+                            </div>
+                            {appliedScholarships.includes(scholarship._id) ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Applied
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleScholarshipApply(scholarship)}
+                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              >
+                                Apply Now
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Facts */}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-800 p-4">
+                    <h3 className="text-lg font-semibold text-white">Course Details</h3>
+                  </div>
+                  <div className="p-5 space-y-4">
+                    <div className="flex items-start">
+                      <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                        <GraduationCap size={16} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Level</p>
+                        <p className="text-gray-900 font-medium capitalize">{course.course_level || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                        <Clock size={16} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Duration</p>
+                        <p className="text-gray-900 font-medium">{course.course_duration || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                        <Calendar size={16} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Intake</p>
+                        <p className="text-gray-900 font-medium">
+                          {Array.isArray(course.intake) && course.intake.length > 0
+                            ? course.intake.join(', ')
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-gray-100 p-2 rounded-lg mr-3">
+                        <CreditCard size={16} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Tuition Fee</p>
+                        <p className="text-gray-900 font-medium">{formatCurrency(course.course_tuition)} per year</p>
+                        <p className="text-xs text-gray-500">
+                          {course.application_fee ? `Application fee: ${formatCurrency(course.application_fee)}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* University Info */}
+                <div className="bg-white rounded-lg border border-gray-200 p-5">
+                  <h3 className="font-medium text-gray-900 mb-3">Offered by</h3>
+                  <div className="flex items-start">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-3 overflow-hidden">
+                      {course.university?.photo ? (
+                        <img
+                          src={`http://localhost:3000${course.university.photo}`}
+                          alt={`${course.university.name} logo`}
+                          className="w-8 h-8 object-contain"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2QjcyN0UiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1ncmFkdWF0aW9uLWNhcCI+PHBhdGggZD0ibTggMTQgMiAyIDQtNCIvPjxwYXRoIGQ9Ik0yMiAxMGMwIDYtNCAxMC0xMCAxMFMyIDIxLjMgMiAxMy44VjVhMiAyIDAgMCAxIDItMmg0Ii8+PHBhdGggZD0i0xNCAyYzAgNCAyLjUgOCA0LjUgMTAgMS4zLTEuMyAyLTMuNyAyLTYiLz48cGF0aCBkPSJNMTguMjIgMTIuMjNhMyAxIDAgMSAwIC0uMjItMS45OSIvPjwvc3ZnPg==';
+                          }}
+                        />
+                      ) : (
+                        <GraduationCap size={20} className="text-gray-400" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{course.university?.name || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{course.university?.location || 'N/A'}</p>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (course.university?._id) {
+                            window.open(`/university/${course.university._id}`, '_blank', 'noopener,noreferrer');
+                          } else {
+                            // toast.error('University information not available');
+                          }
+                        }}
+                        className="text-blue-600 hover:text-blue-800 hover:underline text-sm mt-1 inline-flex items-center transition-colors"
+                        aria-label={`View ${course.university?.name || 'university'} details`}
+                      >
+                        View university <ExternalLink size={14} className="ml-1" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Footer */}
-          <Footer />
-
-          {/* Application Modal */}
-          {showApplicationModal && course && (
-            <ApplicationModal
-              course={course}
-              onClose={() => setShowApplicationModal(false)}
-              onSubmit={handleApplicationSubmit}
-            />
-          )}
-
-          {/* Scholarship Application Modal */}
-          {showScholarshipModal && selectedScholarship && (
-            <ScholarshipApplicationModal
-              scholarship={selectedScholarship}
-              course={course}
-              onClose={() => setShowScholarshipModal(false)}
-              onSuccess={handleScholarshipApplied}
-            />
-          )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer className="mt-auto" />
+
+      {/* Application Modal */}
+      {showApplicationModal && course && (
+        <ApplicationModal
+          course={course}
+          onClose={() => setShowApplicationModal(false)}
+          onSubmit={handleApplicationSubmit}
+        />
+      )}
+
+      {/* Scholarship Application Modal */}
+      {showScholarshipModal && selectedScholarship && (
+        <ScholarshipApplicationModal
+          scholarship={selectedScholarship}
+          course={course}
+          onClose={() => setShowScholarshipModal(false)}
+          onSuccess={handleScholarshipApplied}
+        />
+      )}
     </div>
   );
 };

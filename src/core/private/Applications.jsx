@@ -108,19 +108,21 @@ const Applications = () => {
     };
 
     const filteredApplications = applications.filter(app => {
+        if (!app || !app.course) return false;
         const searchLower = searchTerm.toLowerCase();
         return (
-            app.course.course_name.toLowerCase().includes(searchLower) ||
-            app.course.university.university_name.toLowerCase().includes(searchLower) ||
-            app.status.toLowerCase().includes(searchLower)
+            (app.course.course_name?.toLowerCase() || '').includes(searchLower) ||
+            (app.course.university?.university_name?.toLowerCase() || '').includes(searchLower) ||
+            (app.status?.toLowerCase() || '').includes(searchLower)
         );
     });
 
     const filteredScholarshipApps = scholarshipApps.filter(app => {
+        if (!app || !app.scholarship) return false;
         const searchLower = searchTerm.toLowerCase();
         return (
-            app.scholarship.scholarship_name.toLowerCase().includes(searchLower) ||
-            app.status.toLowerCase().includes(searchLower)
+            (app.scholarship.scholarship_name?.toLowerCase() || '').includes(searchLower) ||
+            (app.status?.toLowerCase() || '').includes(searchLower)
         );
     });
 
@@ -246,7 +248,7 @@ const Applications = () => {
                                                     )}
                                                     {application.acceptanceLetter && (
                                                         <a
-                                                            href={`http://localhost:3000/api/files/letters/${application.acceptanceLetter.split('/').pop()}`}
+                                                            href={`http://localhost:3000/uploads/letters/${application.acceptanceLetter.split('/').pop()}`}
                                                             download={`acceptance_letter_${application.course.university.university_name.replace(/\s+/g, '_')}.pdf`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
@@ -258,7 +260,7 @@ const Applications = () => {
                                                     )}
                                                     {application.rejectionLetter && (
                                                         <a
-                                                            href={`http://localhost:3000/api/files/letters/${application.rejectionLetter.split('/').pop()}`}
+                                                            href={`http://localhost:3000/uploads/letters/${application.rejectionLetter.split('/').pop()}`}
                                                             download={`rejection_letter_${application.course.university.university_name.replace(/\s+/g, '_')}.pdf`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
@@ -320,35 +322,64 @@ const Applications = () => {
                     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                         {filteredScholarshipApps.length > 0 ? (
                             <ul className="divide-y divide-gray-200">
-                                {filteredScholarshipApps.map((application) => (
-                                    <li key={application._id} className="px-6 py-4 hover:bg-gray-50">
+                                {filteredScholarshipApps.map((app) => (
+                                    <li key={app._id} className="px-6 py-4 hover:bg-gray-50">
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center">
                                                     <Award className="flex-shrink-0 h-5 w-5 text-yellow-500" />
                                                     <div className="ml-4">
                                                         <p className="text-sm font-medium text-blue-600 truncate">
-                                                            {application.scholarship.scholarship_name}
+                                                            Scholarship Application
                                                         </p>
                                                         <p className="text-sm text-gray-500 truncate">
-                                                            {application.scholarship.amount_per_year ? `AUD $${application.scholarship.amount_per_year.toLocaleString()} per year` : 'Amount varies'}
+                                                            Status: {app.status}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="ml-4 flex-shrink-0">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[application.status]}`}>
-                                                    {statusLabels[application.status] || application.status}
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${app.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                                    app.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                        'bg-yellow-100 text-yellow-800'
+                                                    }`}>
+                                                    {statusLabels[app.status] || app.status}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="mt-2 text-xs text-gray-500">
-                                            Applied on {formatDate(application.appliedAt)}
+                                            Applied on {new Date(app.createdAt).toLocaleDateString()}
                                         </div>
-                                        {application.scholarship.terms_and_conditions && (
-                                            <div className="mt-2 text-xs text-gray-500">
-                                                <p className="font-medium">Requirements:</p>
-                                                <p>{application.scholarship.terms_and_conditions}</p>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-600">
+                                                Application ID: {app.application?._id || 'N/A'}
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                Status: {app.application?.status || 'N/A'}
+                                            </p>
+                                        </div>
+                                        {(app.acceptanceLetter || app.rejectionLetter) && (
+                                            <div className="mt-3 flex space-x-2">
+                                                {app.acceptanceLetter && (
+                                                    <a
+                                                        href={`http://localhost:3000/${app.acceptanceLetter.split('/').pop()}`}
+                                                        download={`acceptance_letter_${app._id}.pdf`}
+                                                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
+                                                    >
+                                                        <Download className="h-3 w-3 mr-1" />
+                                                        Acceptance Letter
+                                                    </a>
+                                                )}
+                                                {app.rejectionLetter && (
+                                                    <a
+                                                        href={`http://localhost:3000/${app.rejectionLetter.split('/').pop()}`}
+                                                        download={`rejection_letter_${app._id}.pdf`}
+                                                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+                                                    >
+                                                        <Download className="h-3 w-3 mr-1" />
+                                                        Rejection Letter
+                                                    </a>
+                                                )}
                                             </div>
                                         )}
                                     </li>
@@ -359,7 +390,7 @@ const Applications = () => {
                                 <Award className="mx-auto h-12 w-12 text-gray-400" />
                                 <h3 className="mt-2 text-sm font-medium text-gray-900">No scholarship applications</h3>
                                 <p className="mt-1 text-sm text-gray-500">
-                                    You haven't applied to any scholarships yet.
+                                    {searchTerm ? 'No scholarship applications match your search.' : 'You haven\'t applied for any scholarships yet.'}
                                 </p>
                             </div>
                         )}
