@@ -8,7 +8,6 @@ const Footer = () => {
         <footer className="bg-gray-900 text-gray-300 border-t border-gray-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {/* Logo and Description */}
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
                             <img
@@ -37,7 +36,6 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* Quick Links */}
                     <div>
                         <h3 className="text-white font-semibold mb-4">Quick Links</h3>
                         <ul className="space-y-2 text-sm">
@@ -46,11 +44,11 @@ const Footer = () => {
                             <li><Link to="/programs" className="hover:text-white transition-colors">Programs</Link></li>
                             <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
                             <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                            <li><Link to="/help" className="hover:text-white transition-colors">Help</Link></li>
                             <li><Link to="/cost-of-living-calculator" className="hover:text-white transition-colors">Cost of Living Calculator</Link></li>
                         </ul>
                     </div>
 
-                    {/* Contact Info */}
                     <div>
                         <h3 className="text-white font-semibold mb-4">Contact Info</h3>
                         <ul className="space-y-3 text-sm">
@@ -70,7 +68,6 @@ const Footer = () => {
                     </div>
                 </div>
 
-                {/* Copyright */}
                 <div className="border-t border-gray-800 mt-12 pt-6 text-center text-sm text-gray-500">
                     <p> {new Date().getFullYear()} Gradly. All rights reserved.</p>
                 </div>

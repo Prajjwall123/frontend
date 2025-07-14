@@ -1,6 +1,6 @@
 import API from './api';
 
-// Store user data in localStorage
+
 const storeUserData = (data) => {
     try {
         localStorage.setItem('auth', JSON.stringify(data));
@@ -11,7 +11,7 @@ const storeUserData = (data) => {
     }
 };
 
-// Get stored user data from localStorage
+
 const getUserData = () => {
     try {
         const data = localStorage.getItem('auth');
@@ -22,24 +22,24 @@ const getUserData = () => {
     }
 };
 
-// Get authentication token
+
 const getToken = () => {
     const data = getUserData();
     return data ? data.token : null;
 };
 
-// Get user info
+
 const getUserInfo = () => {
     const data = getUserData();
     return data ? data.user : null;
 };
 
-// Check if user is authenticated
+
 const isAuthenticated = () => {
     return !!getToken();
 };
 
-// Clear user data from localStorage
+
 const clearUserData = () => {
     try {
         localStorage.removeItem('auth');
@@ -55,13 +55,13 @@ const loginUser = async (credentials) => {
         console.log("Logging in with credentials:", credentials);
         const response = await API.post("/users/login", credentials);
 
-        // Store the complete response in localStorage
+
         storeUserData(response.data);
 
-        // Check if this is a new user (coming from registration flow)
+
         const isNewUser = localStorage.getItem('isNewUser') === 'true';
 
-        // Clear the flag after checking
+
         localStorage.removeItem('isNewUser');
 
         return {
@@ -77,7 +77,7 @@ const registerUser = async (userData) => {
     try {
         console.log("registering:", userData);
         const response = await API.post("/users/register", userData);
-        // Store in localStorage that this is a new user
+
         localStorage.setItem('isNewUser', 'true');
         return response.data;
     } catch (error) {
@@ -91,10 +91,10 @@ const verifyOTP = async (payload) => {
         const response = await API.post("/users/verify-otp", payload);
         const verifiedUser = response.data;
 
-        // Store user data after successful OTP verification
+
         if (verifiedUser && verifiedUser.token) {
             storeUserData(verifiedUser);
-            // Keep the isNewUser flag for the login redirect
+
             localStorage.setItem('isNewUser', 'true');
         }
 

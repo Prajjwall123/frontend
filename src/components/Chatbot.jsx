@@ -23,12 +23,12 @@ const Chatbot = ({ onClose }) => {
     const messagesContainerRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Get context based on current route and user flow
+
     const getContext = useCallback(() => {
         const path = location.pathname;
         const searchParams = new URLSearchParams(location.search);
 
-        // Main user flow context
+
         const userFlowContext = `
         You are a helpful assistant for a study abroad platform. Here's how the platform works:
         
@@ -67,7 +67,7 @@ const Chatbot = ({ onClose }) => {
         - Support is available for any step in the process
         `;
 
-        // Page-specific context
+
         let pageContext = '';
         if (path.includes('/university')) {
             pageContext = 'The user is browsing universities. Help them find the right university based on their preferences, or explain how to compare different institutions.';
@@ -88,11 +88,11 @@ const Chatbot = ({ onClose }) => {
         return userFlowContext + '\n\n' + pageContext;
     }, [location]);
 
-    // Initialize Gemini with context
+
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    // Initialize speech recognition
+
     useEffect(() => {
         if ('webkitSpeechRecognition' in window) {
             recognitionRef.current = new window.webkitSpeechRecognition();
@@ -125,7 +125,7 @@ const Chatbot = ({ onClose }) => {
         };
     }, [isListening]);
 
-    // Auto-scroll to bottom of messages
+
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
@@ -150,12 +150,12 @@ const Chatbot = ({ onClose }) => {
 
     const toggleSpeaking = () => {
         if (!isSpeaking) {
-            // If we're turning speaking on, cancel any ongoing speech first
+
             if (synthRef.current.speaking) {
                 synthRef.current.cancel();
             }
         } else {
-            // If we're turning speaking off, stop any ongoing speech
+
             if (synthRef.current.speaking) {
                 synthRef.current.cancel();
             }
@@ -177,7 +177,7 @@ const Chatbot = ({ onClose }) => {
     const handleSendMessage = async (message = input) => {
         if (!message.trim()) return;
 
-        // Add user message
+
         const userMessage = {
             id: messages.length + 1,
             text: message,
@@ -188,7 +188,7 @@ const Chatbot = ({ onClose }) => {
         setMessages(prev => [...prev, userMessage]);
         setInput('');
 
-        // Show typing indicator
+
         const typingIndicator = {
             id: messages.length + 2,
             text: '...',
@@ -199,7 +199,7 @@ const Chatbot = ({ onClose }) => {
         setMessages(prev => [...prev, typingIndicator]);
 
         try {
-            // Get AI response with context
+
             const context = getContext();
             const prompt = `
                 ${context}
@@ -225,7 +225,7 @@ const Chatbot = ({ onClose }) => {
             const response = await result.response;
             const text = response.text();
 
-            // Remove typing indicator and add bot response
+
             setMessages(prev => [
                 ...prev.filter(msg => !msg.isTyping),
                 {
@@ -236,7 +236,7 @@ const Chatbot = ({ onClose }) => {
                 }
             ]);
 
-            // Speak the response
+
             speak(text);
         } catch (error) {
             console.error('Error getting AI response:', error);
@@ -274,7 +274,6 @@ const Chatbot = ({ onClose }) => {
 
     return (
         <div className="fixed bottom-4 right-4 w-96 bg-white rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden border border-gray-200" style={{ maxHeight: '80vh' }}>
-            {/* Header */}
             <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
                 <h3 className="font-semibold text-lg">Study Abroad Assistant</h3>
                 <div className="flex space-x-2">
@@ -295,7 +294,6 @@ const Chatbot = ({ onClose }) => {
                 </div>
             </div>
 
-            {/* Messages */}
             <div
                 ref={messagesContainerRef}
                 className="flex-1 p-4 overflow-y-auto bg-gray-50"
@@ -332,7 +330,6 @@ const Chatbot = ({ onClose }) => {
                 </div>
             </div>
 
-            {/* Input Area */}
             <div className="border-t border-gray-200 p-3 bg-white">
                 <div className="flex items-end space-x-2">
                     <div className="flex-1 relative">

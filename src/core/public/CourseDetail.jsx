@@ -67,21 +67,17 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
       setPaymentLoading(true);
       setPaymentError('');
 
-      // Store course ID and intake in localStorage before redirecting
       if (!course?._id) {
         throw new Error('Course ID not found');
       }
       localStorage.setItem('application_course_id', course._id);
       localStorage.setItem('application_intake', selectedIntake);
 
-      // Create application and initiate payment
       const paymentResponse = await createApplicationAndInitiatePayment(1000, course._id, selectedIntake);
 
       if (paymentResponse.success) {
-        // Close the modal
         onClose();
 
-        // Redirect to payment URL in same tab
         window.location.href = paymentResponse.data.payment_url;
       } else {
         throw new Error(paymentResponse.message || 'Failed to create application and initiate payment');
@@ -90,7 +86,6 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
       console.error('Payment error:', error);
       setPaymentError(error.message || 'Failed to create application and initiate payment');
       toast.error(paymentError);
-      // Clean up localStorage on error
       localStorage.removeItem('application_course_id');
       localStorage.removeItem('application_intake');
     } finally {
@@ -405,7 +400,6 @@ const CourseDetail = () => {
   const [appliedScholarships, setAppliedScholarships] = useState([]);
   const currentUser = getUserInfo();
 
-  // Function to handle authentication check and redirect
   const handleAuthRequired = (e, action) => {
     e?.preventDefault();
     if (!isAuthenticated()) {
@@ -417,21 +411,18 @@ const CourseDetail = () => {
     return true;
   };
 
-  // Handle scholarship details click
   const handleViewDetails = (e, scholarshipName) => {
     if (handleAuthRequired(e)) {
       console.log('View details for:', scholarshipName);
     }
   };
 
-  // Handle apply now click
   const handleApplyNow = (e) => {
     if (handleAuthRequired(e)) {
       setShowApplicationModal(true);
     }
   };
 
-  // Handle application submission
   const handleApplicationSubmit = async (applicationData) => {
     try {
       const result = await createApplicationAndInitiatePayment(1000, course._id, applicationData.intake);
@@ -446,10 +437,8 @@ const CourseDetail = () => {
         draggable: true,
       });
 
-      // Close the modal
       setShowApplicationModal(false);
 
-      // Redirect to my-applications page after a short delay
       setTimeout(() => {
         navigate('/my-applications');
       }, 1000);
@@ -482,9 +471,8 @@ const CourseDetail = () => {
         setIsLoading(true);
         const courseData = await getCourseById(id);
         setCourse(courseData);
-        console.log('Course data:', courseData); // Debug log
+        console.log('Course data:', courseData);
 
-        // Fetch scholarships for the university
         if (courseData.university?._id) {
           console.log('Fetching scholarships for university:', courseData.university._id);
           await fetchScholarships(courseData.university._id);
@@ -507,12 +495,12 @@ const CourseDetail = () => {
     setIsLoadingScholarships(true);
     try {
       const response = await getScholarshipsByUniversityId(universityId);
-      console.log('Scholarships response:', response); // Debug log
+      console.log('Scholarships response:', response);
 
       // The response is already the scholarships array
       const scholarshipsData = Array.isArray(response) ? response : [];
 
-      console.log('Extracted scholarships:', scholarshipsData); // Debug log
+      console.log('Extracted scholarships:', scholarshipsData);
       setScholarships(scholarshipsData);
     } catch (error) {
       console.error('Error fetching scholarships:', error);
@@ -565,7 +553,6 @@ const CourseDetail = () => {
     );
   }
 
-  // Format currency
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return 'N/A';
     return new Intl.NumberFormat('en-GB', {
@@ -580,10 +567,8 @@ const CourseDetail = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar className="fixed top-0 w-full z-50" />
       <Chatbot />
-      {/* Main Content */}
       <div className="flex-1 pt-26">
         <div className="container mx-auto px-4">
-          {/* Course Header */}
           <div className="bg-white border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center">
@@ -616,12 +601,9 @@ const CourseDetail = () => {
             </div>
           </div>
 
-          {/* Course Details */}
           <div className="py-8">
             <div className="flex flex-col lg:flex-row gap-6">
-              {/* Left Column */}
               <div className="lg:w-2/3">
-                {/* About Course */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">About this course</h2>
                   <div className="prose max-w-none text-gray-600">
@@ -629,7 +611,6 @@ const CourseDetail = () => {
                   </div>
                 </div>
 
-                {/* Entry Requirements */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Entry Requirements</h2>
                   <ul className="space-y-3">
