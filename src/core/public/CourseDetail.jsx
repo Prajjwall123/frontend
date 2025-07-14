@@ -4,7 +4,7 @@ import { ArrowLeft, BookOpen, Check, Calendar, ExternalLink, GraduationCap, Cloc
 import { getCourseById } from '../../utils/coursesHelper';
 import { getScholarshipsByUniversityId, applyForScholarship } from '../../utils/scholarshipHelper';
 import { isAuthenticated, getUserInfo } from '../../utils/authHelper';
-import { createApplication } from '../../utils/applicationHelper';
+import { initiatePayment } from '../../utils/paymentHelper';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Chatbot from '../../components/Chatbot';
@@ -14,11 +14,15 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedIntake, setSelectedIntake] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   const steps = [
     { id: 'intake', title: 'Pick Intake' },
     { id: 'requirements', title: 'Entry Requirements' },
     { id: 'terms', title: 'Terms & Conditions' },
+    { id: 'payment', title: 'Application Fee' },
   ];
 
   const handleNext = () => {
@@ -34,8 +38,8 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
   };
 
   const handleSubmit = () => {
-    if (currentStep === steps.length - 1 && !agreedToTerms) {
-      toast.error('Please agree to the terms and conditions');
+    if (currentStep === steps.length - 1 && !paymentCompleted) {
+      toast.error('Please complete the payment first');
       return;
     }
 
@@ -55,6 +59,51 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
       onClose();
     } else {
       handleNext();
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      setPaymentLoading(true);
+      setPaymentError('');
+
+      // Store course ID and intake in localStorage before redirecting
+      if (!course?._id) {
+        throw new Error('Course ID not found');
+      }
+      localStorage.setItem('application_course_id', course._id);
+      localStorage.setItem('application_intake', selectedIntake);
+
+      // Initiate payment
+      const paymentResponse = await initiatePayment(1000);
+
+      // Handle the payment response
+      if (paymentResponse.success) {
+        // Open payment URL in a new tab
+        const newWindow = window.open(paymentResponse.payment_url, '_blank');
+        if (newWindow) {
+          // Focus the new window
+          newWindow.focus();
+          // Close the modal
+          onClose();
+          // Show success message
+          toast.success('Payment window opened in a new tab');
+        } else {
+          // If window.open failed (blocked by popup blocker)
+          throw new Error('Payment window was blocked by popup blocker. Please allow popups for this site.');
+        }
+      } else {
+        throw new Error(paymentResponse.message || 'Failed to initiate payment');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      setPaymentError(error.message || 'Failed to initiate payment');
+      toast.error(paymentError);
+      // Clean up localStorage on error
+      localStorage.removeItem('application_course_id');
+      localStorage.removeItem('application_intake');
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -114,6 +163,28 @@ const ApplicationModal = ({ course, onClose, onSubmit }) => {
               <label htmlFor="terms-checkbox" className="ml-2 block text-sm text-gray-700">
                 I agree to the terms and conditions
               </label>
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Application Fee Payment</h3>
+            <p className="text-gray-600">Please complete the payment of your application fee to proceed.</p>
+            {paymentError && (
+              <div className="text-red-500 text-sm mb-2">{paymentError}</div>
+            )}
+            <div className="mt-4">
+              <button
+                onClick={handlePayment}
+                disabled={paymentLoading}
+                className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 ${paymentLoading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  } text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm`}
+              >
+                {paymentLoading ? 'Processing...' : 'Make Payment'}
+              </button>
             </div>
           </div>
         );
